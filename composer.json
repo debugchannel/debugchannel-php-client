@@ -4,9 +4,11 @@
     "type": "project",
     "autoload": {
         "psr-0": { 
-        	"debugchannel": "src/",
-        	"ref": "lib/php-ref/"
-        }
+        	"": "src/"
+        },
+        "files": [
+	      	"lib/php-ref/ref.php"
+        ]
     },
     "require": {
         "php": ">=5.5"
