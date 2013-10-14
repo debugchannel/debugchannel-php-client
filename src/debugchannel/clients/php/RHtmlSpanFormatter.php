@@ -1,6 +1,6 @@
 <?php
 
-namespace debuchannel\clients\php;
+namespace debugchannel\clients\php;
 
 use ref;
 
@@ -11,6 +11,7 @@ use ref;
 /**
  * Generates the output in HTML5 format
  */
+
 class RHtmlSpanFormatter extends \RFormatter{
 
   public

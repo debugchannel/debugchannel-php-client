@@ -1,6 +1,6 @@
 <?php
 
-namespace debuchannel\clients\php;
+namespace debugchannel\clients\php;
 
 use RFormatter;
 

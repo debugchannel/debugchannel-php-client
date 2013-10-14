@@ -1,9 +1,9 @@
 <?php
 
-namespace debuchannel\clients\php;
+namespace debugchannel\clients\php;
 
 use ref;
-use debuchannel\clients\php\RHtmlSpanFormatter;
+use debugchannel\clients\php\RHtmlSpanFormatter;
 
 /**
  * PHP counterpart for uberdebug
