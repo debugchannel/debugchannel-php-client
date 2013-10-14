@@ -1,0 +1,23 @@
+{
+    "name": "squareproton/debuchannel-php-client",
+    "license": "AFFERO",
+    "type": "project",
+    "autoload": {
+        "psr-0": { "debugchannel": "src/" }
+    },
+    "require": {
+        "php": ">=5.5",
+        "digitalnature/php-ref": "*"
+
+    },
+    "repositories": [
+	    {
+    		"type": "vcs",
+	    	"url": "https://github.com/digitalnature/php-ref"
+	    }
+    ],
+    "config": {
+        "process-timeout": 10000
+    },
+    "minimum-stability": "stable"
+}
