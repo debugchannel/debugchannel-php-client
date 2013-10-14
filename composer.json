@@ -1,0 +1,20 @@
+{
+    "name": "squareproton/debuchannel-php-client",
+    "license": "AFFERO",
+    "type": "project",
+    "autoload": {
+        "psr-0": { 
+        	"": "src/"
+        },
+        "files": [
+	      	"lib/php-ref/ref.php"
+        ]
+    },
+    "require": {
+        "php": ">=5.5"
+    },
+    "config": {
+        "process-timeout": 10000
+    },
+    "minimum-stability": "stable"
+}
