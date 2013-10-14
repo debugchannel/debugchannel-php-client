@@ -3,19 +3,15 @@
     "license": "AFFERO",
     "type": "project",
     "autoload": {
-        "psr-0": { "debugchannel": "src/" }
+        "psr-0": { 
+        	"debugchannel": "src/",
+        	"ref": "lib/php-ref/"
+        }
     },
     "require": {
         "php": ">=5.5",
-        "digitalnature/php-ref": "*"
 
     },
-    "repositories": [
-	    {
-    		"type": "vcs",
-	    	"url": "https://github.com/digitalnature/php-ref"
-	    }
-    ],
     "config": {
         "process-timeout": 10000
     },
