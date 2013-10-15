@@ -154,7 +154,9 @@ class D
                     'args' => array(
                         $html,
                         $trace
-                    )
+                    ),
+                    'stacktrace' => [],
+                    'timestamp' => time()
                 )
             );
 
