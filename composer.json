@@ -5,13 +5,11 @@
     "autoload": {
         "psr-0": { 
         	"": "src/"
-        },
-        "files": [
-	      	"lib/php-ref/ref.php"
-        ]
+        }
     },
     "require": {
-        "php": ">=5.5"
+        "php": ">=5.5",
+        "andyhu/php-ref": "dev-master"
     },
     "config": {
         "process-timeout": 10000
