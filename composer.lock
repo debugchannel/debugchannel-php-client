@@ -1,0 +1,69 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
+    ],
+    "hash": "502640189bc5546099c7c44495c5108e",
+    "packages": [
+        {
+            "name": "andyhu/php-ref",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/andyhu/php-ref.git",
+                "reference": "c1535b3a7ba7df4f8a906201ce0a1dd9930bc873"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/andyhu/php-ref/zipball/c1535b3a7ba7df4f8a906201ce0a1dd9930bc873",
+                "reference": "c1535b3a7ba7df4f8a906201ce0a1dd9930bc873",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "ref.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "digitalnature",
+                    "homepage": "http://digitalnature.eu/"
+                }
+            ],
+            "description": "A better alternative to print_r / var_dump",
+            "homepage": "https://github.com/digitalnature/php-ref",
+            "keywords": [
+                "debug",
+                "php",
+                "php-ref",
+                "print_r",
+                "var_dump"
+            ],
+            "time": "2013-07-18 13:45:30"
+        }
+    ],
+    "packages-dev": [
+
+    ],
+    "aliases": [
+
+    ],
+    "minimum-stability": "stable",
+    "stability-flags": {
+        "andyhu/php-ref": 20
+    },
+    "platform": {
+        "php": ">=5.5"
+    },
+    "platform-dev": [
+
+    ]
+}
