@@ -31,19 +31,22 @@ class DTest extends \PHPUnit_Framework_Testcase
 
 	}
 
-	public function powerset($items, $perms = array( )) {
-    if (empty($items)) { 
-        return $perms;
-    }  else {
-        for ($i = count($items) - 1; $i >= 0; --$i) {
-             $newitems = $items;
-             $newperms = $perms;
-             list($foo) = array_splice($newitems, $i, 1);
-             array_unshift($newperms, $foo);
-             $this->powerset($newitems, $newperms);
-         }
-    }
+	public function powerset (array $items)
+	{
+		if(count($items) == 0) return [[]];
+
+		$newitems = array_values($items);
+		$first = array_shift($newitems);
+		$permutations = $this->powerset($newitems);
+		return array_merge(
+			$permutations,
+			array_map(
+					function($set)use($first){return array_merge($set, [$first]);},
+					$permutations
+				)
+		);
 	}
+
 
 	public function provideValidLogObjects()
 	{
