@@ -20,7 +20,7 @@ class DTest extends \PHPUnit_Framework_Testcase
 	{
         $this->d = new D(
             '192.168.2.158',
-            'joseph/unitest',
+            'joseph/test',
             'joseph',
             [
                 'showMethods' => true,
