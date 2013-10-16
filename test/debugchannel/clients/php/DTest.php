@@ -14,13 +14,13 @@ class TSomething extends \stdclass
 // class DTest extends \Bond\Normality\Tests\NormalityProvider
 class DTest extends \PHPUnit_Framework_Testcase
 {
+	private $d;
 
-    public function testLangAgnosticRefParser()
-    {
-
-        $d = new D(
-            '192.168.2.156',
-            'joseph/unitest',
+	public function setup()
+	{
+        $this->d = new D(
+            '192.168.2.158',
+            'joseph/test',
             'joseph',
             [
                 'showMethods' => true,
@@ -28,6 +28,54 @@ class DTest extends \PHPUnit_Framework_Testcase
                 'expLvl' => 2
             ]
         );
+
+	}
+
+	public function powerset (array $items)
+	{
+		if(count($items) == 0) return [[]];
+
+		$newitems = array_values($items);
+		$first = array_shift($newitems);
+		$permutations = $this->powerset($newitems);
+		return array_merge(
+			$permutations,
+			array_map(
+					function($set)use($first){return array_merge($set, [$first]);},
+					$permutations
+				)
+		);
+	}
+
+
+	public function provideValidLogObjects()
+	{
+		$items = [
+			0,
+			33.3,
+			-1,
+			"",
+			"0",
+			"\\\\",
+			array(),
+			array(-1 => 0),
+			new \stdclass(),
+			$this
+		];
+		$permutations = $this->powerset($items);
+		return $permutations;
+	}
+
+	/** @dataProvider provideValidLogObjects */
+	public function testLogIntegerDoesNotThrowException()
+	{
+		print_r(func_get_args());
+		call_user_func_array([$this->d, "log"], func_get_args());
+	}
+
+    public function testLangAgnosticRefParser()
+    {
+    	$d = $this->d;
 
         foreach( range(1,20) as $n ) {
             $d->clear();

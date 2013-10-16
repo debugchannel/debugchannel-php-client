@@ -126,6 +126,11 @@ class D
         return call_user_func_array([$this, "log"], func_get_args());
     }
 
+    public function getTime()
+    {
+    	return microtime(true);
+    }
+
     /**
      * Debug a arbritary number of objects
      *
@@ -154,10 +159,11 @@ class D
                     'args' => array(
                         $html,
                         $trace
-                    )
+                    ),
+                    'stacktrace' => [],
+                    'timestamp' => $this->getTime()
                 )
             );
-
         }
 
         $this->setRefConfig($originalRefOptions);
@@ -195,7 +201,6 @@ class D
 
     public function makeUberRequest( $data )
     {
-
         // add apiKey to request if set
         if( null !== $this->apiKey ) {
             $data['apiKey'] = (string) $this->apiKey;
