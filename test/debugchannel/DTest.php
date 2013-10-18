@@ -87,7 +87,6 @@ class DTest extends \PHPUnit_Framework_Testcase
         call_user_func_array([$this->d, "log"], func_get_args());
     }
 
-/*
     public function testInvoke()
     {
         $this->d->__invoke("testInvoke");
