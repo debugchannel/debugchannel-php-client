@@ -11,6 +11,10 @@ use debugchannel\clients\php\RHtmlSpanFormatter;
 class D
 {
 
+    const ANON_IDENTIFIER = '__ANON__';
+    const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
+    const NO_IDENTIFIER = '__NONE__';
+
     /**
      * @var string Hostname of the uberdebugging server. Think, 'localhost' or '192.168.2.17'
      */
@@ -27,19 +31,29 @@ class D
     private $apiKey;
 
     /**
-     * See, ref.php for the complete list of allowed options
-     * The ones I think you'll probably want are
-     * array(
-     *     'expLvl'               => 1, // initially expanded levels (for HTML mode only)
-     *     'maxDepth'             => 6, // depth limit (0 = no limit)
-     *     'showIteratorContents' => false,
-     *     'showResourceInfo'     => true,
-     *     'showMethods'          => true,
-     *     'showPrivateMembers'   => false,
-     *     'showStringMatches'    => true, // peform string matches (date, file, functions, classes, json, serialized data, regex etc.). Thisseriously slows down queries on large amounts of data
-     * );
+     * See, Allowed options include the phpRef ones below
      */
-    private $phpRefOptions;
+    private $options = array(
+        'includeSequence' => true,
+    );
+
+    /**
+     * List of the options that'll be passed to phpRef
+     * @var array
+     */
+    private $phpRefOptionsAllowed = ['expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches' ];
+
+    /**
+     * Private static process identifier
+     * @var string
+     */
+    private static $pid;
+
+    /**
+     * Monotonically increasing seqence number for message
+     * @var int
+     */
+    private static $messageSequenceNumber;
 
     /**
      * Standard constructor, blah blah
@@ -47,7 +61,7 @@ class D
      * @param string Channel
      * @param array ref options. See, ref.php for list of allowed options
      */
-    public function __construct( $host, $channel, $apiKey = null, array $phpRefOptions = ["showPrivateMembers" => true, "expLvl" => 3] )
+    public function __construct( $host, $channel, $apiKey = null, array $options = ["showPrivateMembers" => true, "expLvl" => 3] )
     {
         $this->host = (string) $host;
         $this->setChannel($channel);
@@ -55,7 +69,7 @@ class D
             throw new \InvalidArgumentException("apiKey must be a string.");
         }
         $this->apiKey = $apiKey;
-        $this->setPhpRefOptions($phpRefOptions);
+        $this->setOptions($options);
     }
 
     /**
@@ -87,16 +101,25 @@ class D
      * @param array
      * @return Bond\D
      */
-    public function setPhpRefOptions( array $phpRefOptions )
+    public function setOptions( array $options )
     {
-        if( !array_key_exists('stylePath', $phpRefOptions) ) {
-            $phpRefOptions['stylePath'] = false;
-        }
-        if( !array_key_exists('scriptPath', $phpRefOptions) ) {
-            $phpRefOptions['scriptPath'] = false;
-        }
-        $this->phpRefOptions = $phpRefOptions;
+        $this->options = $options;
         return $this;
+    }
+
+    /**
+     * Get options to pass to phpref
+     * @return array
+     */
+    private function getPhpRefOptions()
+    {
+        $phpRefOptions = array_intersect_key(
+            $this->options,
+            array_flip( $this->phpRefOptionsAllowed )
+        );
+        $phpRefOptions['stylePath'] = false;
+        $phpRefOptions['scriptPath'] = false;
+        return $phpRefOptions;
     }
 
     /**
@@ -113,7 +136,7 @@ class D
      */
     public function clear()
     {
-        $this->makeUberRequest(
+        $this->makeRequest(
             array(
                 'handler' => 'clear',
                 'args' => array()
@@ -121,9 +144,14 @@ class D
         );
     }
 
+    /**
+     * Handy shortcut fo ->log().
+     */
     public function __invoke()
     {
-        return call_user_func_array([$this, "log"], func_get_args());
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $this->makePhpRefCall( $trace, func_get_args() );
+        return $this;
     }
 
     /**
@@ -134,21 +162,27 @@ class D
      */
     public function log()
     {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $this->makePhpRefCall( $trace, func_get_args() );
+        return $this;
+    }
 
-        $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+    private function makePhpRefCall( array $trace, array $args )
+    {
 
-        $originalRefOptions = $this->setRefConfig($this->phpRefOptions);
+        $trace = $this->formatTrace($trace);
+        $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
 
         // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
         $ref = new ref(new RHtmlSpanFormatter());
 
-        foreach( func_get_args() as $arg ) {
+        foreach( $args as $arg ) {
 
             ob_start();
             $ref->query( $arg, null );
             $html = ob_get_clean();
 
-            $this->makeUberRequest(
+            $this->makeRequest(
                 array(
                     'handler' => 'php-ref',
                     'args' => array(
@@ -161,7 +195,6 @@ class D
         }
 
         $this->setRefConfig($originalRefOptions);
-
     }
 
     /**
@@ -180,7 +213,7 @@ class D
 
         $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
 
-        $this->makeUberRequest(
+        $this->makeRequest(
             array(
                 'handler' => 'syntaxHighlight',
                 'args' => array(
@@ -193,13 +226,16 @@ class D
 
     }
 
-    public function makeUberRequest( $data )
+    public function makeRequest( $data )
     {
 
         // add apiKey to request if set
         if( null !== $this->apiKey ) {
             $data['apiKey'] = (string) $this->apiKey;
         }
+
+        // process id
+        $data['info'] = $this->getInfoArray();
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
@@ -220,6 +256,23 @@ class D
 
         return $curlInfo;
 
+    }
+
+    /**
+     * Get client identifier
+     * @return bool|string
+     */
+    private function getIdentifier()
+    {
+        switch( $options['identifier'] ) {
+            case self::ANON_IDENTIFIER:
+                return 'anon';
+            case self::DESCRIPTIVE_IDENTIFIER:
+                return 'descriptive';
+            case self::NO_IDENTIFIER;
+                return false;
+        }
+        return $options['identifier'];
     }
 
     private function setRefConfig( array $options )
@@ -268,6 +321,25 @@ class D
             $line = substr( $line, $indent );
         }
         return implode("\n", $text);
+    }
+
+    private function getInfoArray()
+    {
+        return array(
+            'pid' => $this->getPid(),
+            'sequenceNumber' => ++self::$messageSequenceNumber,
+            'generationTime' => microtime(true),
+        );
+    }
+
+    private function getPid()
+    {
+        // process information
+        if( !isset(self::$pid) ) {
+            // whatever this can change
+            self::$pid = md5( microtime(). getmypid() );
+        }
+        return self::$pid;
     }
 
 }

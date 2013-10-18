@@ -6,198 +6,116 @@ use debugchannel\clients\php\D;
 use debugchannel\clients\php\RHtmlSpanFormatter;
 use debugchannel\clients\php\LanguageAgnosticParser;
 
-class TSomething extends \stdclass
-{
-    public function whatever () {}
-}
-
 // class DTest extends \Bond\Normality\Tests\NormalityProvider
 class DTest extends \PHPUnit_Framework_Testcase
 {
 
-    public function testLangAgnosticRefParser()
+    const DEFAULT_HOST = 'localhost';
+    const DEFAULT_CHANNEL = 'phpunit';
+    const DEFAULT_API_KEY = null;
+
+    private $d;
+
+    public function __construct()
     {
 
-        $d = new D(
-            '192.168.2.156',
-            'joseph/unitest',
-            'joseph',
-            [
-                'showMethods' => true,
-                'showPrivateMembers' => true,
-                'expLvl' => 2
+        $options = [
+            'showMethods' => true,
+            'showPrivateMembers' => true,
+            'expLvl' => 2
+        ];
+
+        $this->d = new D(
+            self::DEFAULT_HOST,
+            self::DEFAULT_CHANNEL,
+            self::DEFAULT_API_KEY,
+            $options
+        );
+
+    }
+
+    public function testClear()
+    {
+        $this->d->log("cleared");
+        $this->d->clear();
+    }
+
+    public function testLog()
+    {
+        $this->d->log("testLog");
+    }
+
+    public function testInvoke()
+    {
+        $this->d->__invoke("testInvoke");
+    }
+
+    public function testStyntaxHightlight()
+    {
+        $this->d->syntaxHighlight('SELECT * FROM something;');
+    }
+
+    public function testTable()
+    {
+        $data = array(
+            'handler' => 'table',
+            'args' => [
+                [0,1,2,3,4,5],
+                [0,1,2,3,4,5],
+                ['<',"<div>",2,3,4,5],
             ]
         );
+        $this->d->makeRequest($data);
+    }
 
-        foreach( range(1,20) as $n ) {
-            $d->clear();
-            $d($n);
-            usleep(100000);
-        }
-
-
-//        $d($this);
-
-//        $d->clear();
-
+    public function testImage()
+    {
         $data = array(
-            'handler' => 'unknown',
-            'args' => array(
-                "what",
-                "what",
+            'handler' => 'image',
+            'args' => [
+                base64_encode(file_get_contents(__DIR__.'/testImage.png'))
+            ]
+        );
+        $this->d->makeRequest($data);
+    }
+
+    public function testUnknownHandler()
+    {
+        $this->d->makeRequest(
+            array(
+                "is this a valid request" => false,
+                "who" => __CLASS__,
             )
         );
-        $d->makeUberRequest($data);
-        return;
-        // $d($this);
-        // $d->syntaxHighlight("select * from monkey");
-        $d(1);
+    }
 
-        return;
-
-        $data = array(
-            'handler' => 'slickGrid',
-            'args' => [ 1 ]
+    public function testChat()
+    {
+        $this->d->makeRequest(
+            array(
+                'handler' => 'chat',
+                'args' => [
+                    'Pete',
+                    "Hi."
+                ]
+            )
         );
+    }
 
-        $d->makeUberRequest($data);
-
-
+    public function testChatAnon()
+    {
+        $this->d->makeRequest(
+            array(
+                'handler' => 'chat',
+                'args' => [
+                    "Hi.",
+                ]
+            )
+        );
     }
 
 
 /*
-    public function testLangAgnosticRefParser()
-    {
-
-        $d = new D(
-            '192.168.2.17',
-            'unittest/pete',
-            [
-                'showMethods' => true,
-                'showPrivateMembers' => true,
-                'expLvl' => 2
-            ]
-        );
-
-
-        \ref::config('stylePath', false);
-        \ref::config('scriptPath', false);
-
-        $lap = new LanguageAgnosticParser( new RHtmlSpanFormatter() );
-
-        $data = array(
-            'handler' => 'php-ref',
-            'args' => array(
-                null,
-                []
-            )
-        );
-
-
-        $data['args'][0] = $lap->query($this->getNull());
-        $d->makeUberRequest($data);
-        $d(null);
-
-        $data['args'][0] = $lap->query($this->getScalarNumeric());
-        $d->makeUberRequest($data);
-        $d(3);
-
-        $data['args'][0] = $lap->query($this->getScalarString());
-        $d->makeUberRequest($data);
-        $d("hello world");
-
-        $data['args'][0] = $lap->query($this->getSimpleObject());
-        $d->makeUberRequest($data);
-        $d(new TSomething());
-
-    }
-
-    public function testSomething()
-    {
-
-        $d = new D(
-            '192.168.2.17',
-            'unittest/pete',
-            [
-                'showMethods' => true,
-                'showPrivateMembers' => true,
-                'expLvl' => 2
-            ]
-        );
-
-
-        $data = array(
-            'handler' => 'tabularData',
-            'args' => [
-                [
-                    [0,1,2,3,4,5],
-                    [0,1,2,3,4,5],
-                    [0,1,2,3,4,5],
-                    [0,1,2,3,4,5],
-                    [0,1,2,3,4,5],
-                ]
-            ]
-        );
-
-        $d->makeUberRequest($data);
-
-
-        return;
-
-        $d("fcuk");
-
-        $d->syntaxHighlight( <<<SQL
-            SELECT
-                *
-            FROM
-                sometable
-            WHERE
-                something = true
-SQL
-        );
-
-        return;
-
-        $d->syntaxHighlight( <<<'SQL'
-var $spanner = '23'
-SQL
-            , 'javascript'
-        );
-
-
-        return;
-
-        $d( $this );
-
-    }
-
-    private function getNull()
-    {
-        $output = "null";
-        return json_decode( $output, true );
-    }
-
-    private function getScalarNumeric()
-    {
-        $output = <<<JSON
-        {
-            "scalar": 3
-        }
-JSON;
-        return json_decode( $output, true );
-    }
-
-    private function getScalarString()
-    {
-        $output = <<<JSON
-        {
-            "scalar": "hello world"
-        }
-JSON;
-        return json_decode( $output, true );
-    }
-
     private function getSimpleObject()
     {
         $output = <<<JSON
@@ -231,6 +149,5 @@ JSON;
         return json_decode( $output, true );
     }
     */
-
 
 }
