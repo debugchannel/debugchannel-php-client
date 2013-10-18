@@ -6,7 +6,6 @@ use debugchannel\D;
 use debugchannel\RHtmlSpanFormatter;
 use debugchannel\LanguageAgnosticParser;
 
-// class DTest extends \Bond\Normality\Tests\NormalityProvider
 class DTest extends \PHPUnit_Framework_Testcase
 {
 
@@ -155,7 +154,6 @@ class DTest extends \PHPUnit_Framework_Testcase
             )
         );
     }
-
 
 /*
     private function getSimpleObject()
