@@ -45,7 +45,48 @@ class DTest extends \PHPUnit_Framework_Testcase
         $this->d->log("testLog");
     }
 
-/*
+    public function powerset (array $items)
+    {
+        if(count($items) == 0) return [[]];
+
+        $newitems = array_values($items);
+        $first = array_shift($newitems);
+        $permutations = $this->powerset($newitems);
+        return array_merge(
+            $permutations,
+            array_map(
+                    function($set)use($first){return array_merge($set, [$first]);},
+                    $permutations
+                )
+        );
+    }
+
+
+    public function provideValidLogObjects()
+    {
+        $items = [
+            0,
+            33.3,
+            -1,
+            "",
+            "0",
+            "\\\\",
+            array(),
+            array(-1 => 0),
+            new \stdclass(),
+            $this
+        ];
+        $permutations = $this->powerset($items);
+        return $permutations;
+    }
+
+    /** @dataProvider provideValidLogObjects */
+    public function testLogIntegerDoesNotThrowException()
+    {
+        // print_r(func_get_args());
+        call_user_func_array([$this->d, "log"], func_get_args());
+    }
+
     public function testInvoke()
     {
         $this->d->__invoke("testInvoke");

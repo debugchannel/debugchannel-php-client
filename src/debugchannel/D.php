@@ -158,6 +158,11 @@ class D
         return $this;
     }
 
+    public function getTime()
+    {
+    	return microtime(true);
+    }
+
     /**
      * Debug a arbritary number of objects
      *
@@ -192,10 +197,11 @@ class D
                     'args' => array(
                         $html,
                         $trace
-                    )
+                    ),
+                    'stacktrace' => [],
+                    'timestamp' => $this->getTime()
                 )
             );
-
         }
 
         $this->setRefConfig($originalRefOptions);
@@ -232,7 +238,6 @@ class D
 
     public function makeRequest( $data )
     {
-
         // add apiKey to request if set
         if( null !== $this->apiKey ) {
             $data['apiKey'] = (string) $this->apiKey;
