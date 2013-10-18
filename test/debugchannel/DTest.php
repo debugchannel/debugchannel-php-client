@@ -1,10 +1,10 @@
 <?php
 
-namespace debugchannel\clients\php;
+namespace debugchannel;
 
-use debugchannel\clients\php\D;
-use debugchannel\clients\php\RHtmlSpanFormatter;
-use debugchannel\clients\php\LanguageAgnosticParser;
+use debugchannel\D;
+use debugchannel\RHtmlSpanFormatter;
+use debugchannel\LanguageAgnosticParser;
 
 // class DTest extends \Bond\Normality\Tests\NormalityProvider
 class DTest extends \PHPUnit_Framework_Testcase
