@@ -49,10 +49,15 @@ class D
     private static $pid;
 
     /**
+     * Private static machine identifier
+     */
+    private static $machineId;
+
+    /**
      * Monotonically increasing seqence number for message
      * @var int
      */
-    private static $messageSequenceNumber;
+    private static $messageSequenceNo;
 
     /**
      * Standard constructor, blah blah
@@ -325,8 +330,9 @@ class D
     private function getInfoArray()
     {
         return array(
+            'machineId' => $this->getMachineId(),
             'pid' => $this->getPid(),
-            'sequenceNumber' => ++self::$messageSequenceNumber,
+            'sequenceNo' => ++self::$messageSequenceNo,
             'generationTime' => microtime(true),
         );
     }
@@ -339,6 +345,14 @@ class D
             self::$pid = md5( microtime(). getmypid() );
         }
         return self::$pid;
+    }
+
+    private function getMachineId()
+    {
+        if( !isset(self::$machineId) ) {
+            self::$machineId = php_uname('n');
+        }
+        return self::$machineId;
     }
 
 }

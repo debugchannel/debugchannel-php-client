@@ -45,6 +45,7 @@ class DTest extends \PHPUnit_Framework_Testcase
         $this->d->log("testLog");
     }
 
+/*
     public function testInvoke()
     {
         $this->d->__invoke("testInvoke");
