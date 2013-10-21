@@ -40,7 +40,7 @@ class D
      * List of the options that'll be passed to phpRef
      * @var array
      */
-    private $phpRefOptionsAllowed = ['expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches' ];
+    private $phpRefOptionsAllowed = array('expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches' );
 
     /**
      * Private static process identifier
@@ -65,7 +65,7 @@ class D
      * @param string Channel
      * @param array ref options. See, ref.php for list of allowed options
      */
-    public function __construct( $host, $channel, $apiKey = null, array $options = ["showPrivateMembers" => true, "expLvl" => 3] )
+    public function __construct( $host, $channel, $apiKey = null, array $options = array("showPrivateMembers" => true, "expLvl" => 3) )
     {
         $this->host = (string) $host;
         $this->setChannel($channel);
@@ -246,7 +246,7 @@ class D
         curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
         curl_setopt($ch, CURLOPT_TIMEOUT, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json'] );
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json') );
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data) );
 
         $response = curl_exec($ch);
