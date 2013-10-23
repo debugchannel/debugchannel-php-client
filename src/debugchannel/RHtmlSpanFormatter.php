@@ -1,6 +1,6 @@
 <?php
 
-namespace debugchannel\clients\php;
+namespace debugchannel;
 
 use ref;
 
