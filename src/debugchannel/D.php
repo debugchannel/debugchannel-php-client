@@ -40,7 +40,7 @@ class D
      * List of the options that'll be passed to phpRef
      * @var array
      */
-    private $phpRefOptionsAllowed = ['expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches' ];
+    private $phpRefOptionsAllowed = array('expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches' );
 
     /**
      * Private static process identifier
@@ -65,7 +65,7 @@ class D
      * @param string Channel
      * @param array ref options. See, ref.php for list of allowed options
      */
-    public function __construct( $host, $channel, $apiKey = null, array $options = ["showPrivateMembers" => true, "expLvl" => 3] )
+    public function __construct( $host, $channel, $apiKey = null, array $options = array("showPrivateMembers" => true, "expLvl" => 3) )
     {
         $this->host = (string) $host;
         $this->setChannel($channel);
@@ -149,18 +149,14 @@ class D
     }
 
     /**
-     * Handy shortcut fo ->log().
+     * Alias for ->log().
      */
-    public function __invoke()
+    public function __invoke( $dataToLog, array $tags = array() )
     {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        $this->makePhpRefCall( $trace, func_get_args() );
-        return $this;
-    }
-
-    public function getTime()
-    {
-    	return microtime(true);
+        return call_user_func(
+            array( $this, 'log'),
+            func_get_args()
+        );
     }
 
     /**
@@ -169,23 +165,15 @@ class D
      * @param mixed Item to debug
      * @param ...
      */
-    public function log()
-    {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-        $this->makePhpRefCall( $trace, func_get_args() );
-        return $this;
-    }
-
-    private function makePhpRefCall( array $trace, array $args )
+    public function log( $dataToLog, array $tags = array() )
     {
 
-        $trace = $this->formatTrace($trace);
         $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
 
         // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
         $ref = new ref(new RHtmlSpanFormatter());
 
-        foreach( $args as $arg ) {
+        foreach( func_get_args() as $arg ) {
 
             ob_start();
             $ref->query( $arg, null );
@@ -196,15 +184,14 @@ class D
                     'handler' => 'php-ref',
                     'args' => array(
                         $html,
-                        $trace
                     ),
-                    'stacktrace' => [],
-                    'timestamp' => $this->getTime()
+                    'tags' => $tags,
                 )
             );
         }
 
         $this->setRefConfig($originalRefOptions);
+        return $this;
     }
 
     /**
@@ -214,23 +201,20 @@ class D
      * @param string Language to highlight it as
      * @param bool Deindent string? This works well for sql
      */
-    public function syntaxHighlight( $text, $lang = 'sql', $deIndent = true )
+    public function syntaxHighlight( $text, $lang = 'sql', $deIndent = true, array $tags = array() )
     {
 
         if( $deIndent ) {
             $text = $this->deIndent($text);
         }
-
-        $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-
         $this->makeRequest(
             array(
                 'handler' => 'syntaxHighlight',
                 'args' => array(
                     $text,
                     $lang,
-                    $trace,
-                )
+                ),
+                'tags' => $tags,
             )
         );
 
@@ -238,6 +222,18 @@ class D
 
     public function makeRequest( $data )
     {
+
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $offset = 0;
+        // this loop construct starts on the second element
+        while( $working = next($trace) and isset($working['class']) and $working['class'] === __CLASS__ ) {
+            $offset++;
+        }
+        // exclude all but the first call to debugchannel\D
+        $data['trace'] = $this->formatTrace( array_slice($trace, $offset) );
+        // tags are a required field
+        $data['tags'] = isset($data['tags']) ? $data['tags'] : array();
+
         // add apiKey to request if set
         if( null !== $this->apiKey ) {
             $data['apiKey'] = (string) $this->apiKey;
@@ -250,7 +246,7 @@ class D
         curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
         curl_setopt($ch, CURLOPT_TIMEOUT, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json'] );
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json') );
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data) );
 
         $response = curl_exec($ch);
@@ -299,13 +295,13 @@ class D
         return array_map(
             function ( $component ) {
                 if( isset($component['file'], $component['line']) and $component['line'] > 0 ) {
-                    $location = sprintf( "%s(%s): ", $component['file'], $component['line'] );
+                    $location = sprintf( "%s (%s): ", $component['file'], $component['line'] );
                 } else {
                     $location = '';
                 }
 
                 $fn = isset( $component['class'] ) ? "{$component['class']}{$component['type']}" : '';
-                $fn .= "{$component['function']}()";
+                $fn .= "{$component['function']} ()";
 
                 return array(
                     'location' => $location,
