@@ -129,6 +129,7 @@ class DTest extends \PHPUnit_Framework_Testcase
 
     public function testUnknownHandler()
     {
+        $this->d->clear();
         $this->d->makeRequest(
             array(
                 "is this a valid request" => false,
