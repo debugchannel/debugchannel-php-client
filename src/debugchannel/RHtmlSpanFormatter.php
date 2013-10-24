@@ -363,3 +363,5 @@ class RHtmlSpanFormatter extends \RFormatter{
   }
 
 }
+
+?>
