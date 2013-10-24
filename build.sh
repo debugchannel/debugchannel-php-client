@@ -2,10 +2,13 @@
 
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 destfile=dist/D.php
-srcfiles=(src/D.php src/LanguageAgnosticParser.php RHtmlSpanFormatter.php src/ref.php)
+srcprefix=src/debugchannel/
+srcfiles=(D.php LanguageAgnosticParser.php RHtmlSpanFormatter.php ref.php)
 
-echo "" > $destfile
+rm $destfile
+touch $destfile
 for file in "${srcfiles[@]}"
 do
-	cat $file >> $destfile
+	cat "${srcprefix}${file}" >> $destfile
+	echo "" >> $destfile
 done
