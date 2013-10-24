@@ -92,68 +92,35 @@ class DTest extends \PHPUnit_Framework_Testcase
         $this->d->__invoke("testInvoke");
     }
 
-    public function testStyntaxHightlight()
+    public function testCode()
     {
-        $this->d->syntaxHighlight('SELECT * FROM something;');
+        $this->d->code('SELECT * FROM something;');
     }
 
     public function testTable()
     {
-        $data = array(
-            'handler' => 'table',
-            'args' => [
+        $table = [
                 [0,1,2,3,4,5],
                 [0,1,2,3,4,5],
                 ['<',"<div>",2,3,4,5],
-            ]
-        );
-        $this->d->makeRequest($data);
+            ];
+        $this->d->table($table);
     }
 
     public function testImage()
     {
-        $data = array(
-            'handler' => 'image',
-            'args' => [
-                base64_encode(file_get_contents(__DIR__.'/testImage.png'))
-            ]
-        );
-        $this->d->makeRequest($data);
+        $this->d->image('testImage.png');
     }
 
-    public function testUnknownHandler()
-    {
-        $this->d->makeRequest(
-            array(
-                "is this a valid request" => false,
-                "who" => __CLASS__,
-            )
-        );
-    }
-
+   
     public function testChat()
     {
-        $this->d->makeRequest(
-            array(
-                'handler' => 'chat',
-                'args' => [
-                    'Pete',
-                    "Hi."
-                ]
-            )
-        );
+        $this->d->chat('Hi', 'Pete');
     }
 
     public function testChatAnon()
     {
-        $this->d->makeRequest(
-            array(
-                'handler' => 'chat',
-                'args' => [
-                    "Hi.",
-                ]
-            )
-        );
+        $this->d->chat('Hi');
     }
 
 
