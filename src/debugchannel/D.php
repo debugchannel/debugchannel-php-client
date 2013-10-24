@@ -73,10 +73,81 @@ namespace debugchannel {
         /**#@-*/
 
         /**
-         * Standard constructor, blah blah
-         * @param string Hostname
-         * @param string Channel
-         * @param array ref options. See, ref.php for list of allowed options
+         * Create a D object bound to a specific channel and server.
+         *
+         * options can be provided which customize how explore works. 
+         * the options available are:
+         * <table>
+         * <thead><tr>
+         * <th align="left">Option</th>
+         * <th align="left">Default</th>
+         * <th align="left">Description</th>
+         * </tr></thead>
+         * <tbody>
+         * <tr>
+         * <td align="left"><code>'expLvl'</code></td>
+         * <td align="left"><code>1</code></td>
+         * <td align="left">Initially expanded levels (for HTML mode only). A negative value will expand all levels</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'maxDepth'</code></td>
+         * <td align="left"><code>6</code></td>
+         * <td align="left">Maximum depth (<code>0</code> to disable); note that disabling it or setting a high value can produce a 100+ MB page when input involves large data</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showIteratorContents'</code></td>
+         * <td align="left"><code>FALSE</code></td>
+         * <td align="left">Display iterator data (keys and values)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showResourceInfo'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Display additional information about resources</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showMethods'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Display methods and parameter information on objects</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showPrivateMembers'</code></td>
+         * <td align="left"><code>FALSE</code></td>
+         * <td align="left">Include private properties and methods</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showStringMatches'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Perform and display string matches for dates, files, json strings, serialized data, regex patterns etc. (SLOW)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'formatters'</code></td>
+         * <td align="left"><code>array()</code></td>
+         * <td align="left">Custom/external formatters (as associative array: format =&gt; className)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'shortcutFunc'</code></td>
+         * <td align="left"><code>array('r', 'rt')</code></td>
+         * <td align="left">Shortcut functions used to detect the input expression. If they are namespaced, the namespace must be present as well (methods are not  supported)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'stylePath'</code></td>
+         * <td align="left"><code>'{:dir}/ref.css'</code></td>
+         * <td align="left">Local path to a custom stylesheet (HTML only); <code>FALSE</code> means that no CSS is included.</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'scriptPath'</code></td>
+         * <td align="left"><code>'{:dir}/ref.js'</code></td>
+         * <td align="left">Local path to a custom javascript (HTML only); <code>FALSE</code> means no javascript (tooltips / toggle / kbd shortcuts require JS)</td>
+         * </tr>
+         * </tbody>
+         * </table>
+         * 
+         * @access public
+         * @param string $host  the string is the address of debug channel server
+         * @param string $channel  the channel to publish all messages on
+         * @param string $apiKey the apiKey of the user who is publishing the messages. default is null.
+         * @param array $options  options array to configure the way explore traverses the object graph and renders it.
+         *
          */
         public function __construct( $host, $channel, $apiKey = null, array $options = ["showPrivateMembers" => true, "expLvl" => 3] )
         {
