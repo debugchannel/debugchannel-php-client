@@ -372,8 +372,10 @@ namespace debugchannel {
          * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
          * @return D  the D instance bound to $this
          */
-        public function chat($message, $senderName="php-client")
+        public function chat($message, $senderName)
         {
+            $senderName = $senderName ? $senderName : self::ANON_IDENTIFIER;
+
             return $this->sendDebug('chat', [$senderName, $message]);
         }
 
