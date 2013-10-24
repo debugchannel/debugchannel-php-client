@@ -112,7 +112,6 @@ class DTest extends \PHPUnit_Framework_Testcase
         $this->d->image('testImage.png');
     }
 
-   
     public function testChat()
     {
         $this->d->chat('Hi', 'Pete');
