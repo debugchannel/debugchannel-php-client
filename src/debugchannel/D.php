@@ -10,7 +10,11 @@ namespace debugchannel {
     class D
     {
 
-        const ANON_IDENTIFIER = '__ANON__';
+        /**
+         * default value for senderName when sending chat messages.
+         * @const ANON_IDENtIFIER 
+         */
+        const ANON_IDENTIFIER = 'PHP-client';
         const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
         const NO_IDENTIFIER = '__NONE__';
 
