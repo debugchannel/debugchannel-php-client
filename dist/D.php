@@ -159,6 +159,17 @@ namespace debugchannel {
             }
         }
 
+        /**
+         * publishes an interactable object graph
+         *
+         * if val is an object or array it will generate an object graph.
+         * if val is a primitive such as int, string, etc then it just displays the value. 
+         * It can detect recursion, replacing the reference with a "RECURSION" string.
+         * $val is not modified.
+         * @access public
+         * @param mixed $val  the mixed value to publish
+         * @return D  the D object bound to $this
+         */
         public function explore($val)
         {
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
@@ -166,6 +177,20 @@ namespace debugchannel {
             return $this;            
         }
 
+        /**
+         * publishes the 2-dimensional array as a table
+         *
+         * given a 2-dimensional array, treat it as a table when rendering it.
+         * In the browser it will be shown as a table, with the first dimension being 
+         * the rows, and the second dimension being columns.
+         * The values of each cell should be primtives, ie string, int, etc but can be objects.
+         * the exact method of displaying the objects is undefined hence it is advised that the 
+         * cells are primtives.
+         * 
+         * @access public
+         * @param array $table a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
+         * @return D the D instance bound to $this
+         */
         public function table(array $table)
         {
             return $this->sendDebug('table', [$table]);
