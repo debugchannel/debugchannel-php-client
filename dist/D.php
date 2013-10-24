@@ -20,7 +20,13 @@ namespace debugchannel {
          */
 
         /**
-         * @var string Hostname of the uberdebugging server. Think, 'localhost' or '192.168.2.17'
+         * address of debug channel server 
+         * 
+         * potential values would be localhost, 192.168.2.17, 127.0.0.1.
+         * either domain names or ip addresses can be used.
+         *
+         * @var string 
+         * 
          */
         private $host;
 
