@@ -368,7 +368,6 @@ namespace debugchannel {
          * publishes the message text with a senders name attached.
          * the senderName can be anything, and  does not need to be the same on every consecutive call.
          * 
-         * @access public
          * @param string $message  the string containing the message to publish as IM message
          * @param string $senderName  the name of the sender that will be displayed next to the message
          * @return D  the D instance bound to $this
