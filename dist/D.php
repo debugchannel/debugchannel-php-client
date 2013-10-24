@@ -10,7 +10,11 @@ namespace debugchannel {
     class D
     {
 
-        const ANON_IDENTIFIER = '__ANON__';
+        /**
+         * default value for senderName when sending chat messages.
+         * @const ANON_IDENtIFIER 
+         */
+        const ANON_IDENTIFIER = 'PHP-client';
         const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
         const NO_IDENTIFIER = '__NONE__';
 
@@ -71,6 +75,11 @@ namespace debugchannel {
         private static $messageSequenceNo;
 
         /**#@-*/
+
+        /**#@+
+         * @access public
+         */
+
 
         /**
          * Create a D object bound to a specific channel and server.
@@ -142,7 +151,6 @@ namespace debugchannel {
          * </tbody>
          * </table>
          * 
-         * @access public
          * @param string $host  the string is the address of debug channel server
          * @param string $channel  the channel to publish all messages on
          * @param string $apiKey the apiKey of the user who is publishing the messages. default is null.
@@ -161,9 +169,16 @@ namespace debugchannel {
         }
 
         /**
-         * Magic getter.
-         * @param string propertyName
-         * @return mixed
+         * provides getter methods for all properties private and public.
+         *
+         * all properties will get a a getter method.
+         * for exmaple the private property $name of type string 
+         * will get a getter method with the signature:
+         * <pre><code>public function name() :: string</code></pre>
+         *
+         * @param string $property  the string which represents the name of the property to reuturn.
+         * @return mixed  value of property
+         * @throws \InvalidArgumentException when no property exists with the name.
          */
         public function __get( $property )
         {
@@ -250,7 +265,6 @@ namespace debugchannel {
          * if val is a primitive such as int, string, etc then it just displays the value. 
          * It can detect recursion, replacing the reference with a "RECURSION" string.
          * $val is not modified.
-         * @access public
          * @param mixed $val  the mixed value to publish
          * @return D  the D object bound to $this
          */
@@ -271,7 +285,6 @@ namespace debugchannel {
          * the exact method of displaying the objects is undefined hence it is advised that the 
          * cells are primtives.
          * 
-         * @access public
          * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
          * @return D the D instance bound to $this
          */
@@ -286,7 +299,6 @@ namespace debugchannel {
          * the string is publishes as a plain string without formatting.
          * it cannot be null, and cannot be any other primtive such as int. 
          *
-         * @access public
          * @param string $text  the string to publish as raw text
          * @return D the D instance bound to $this.
          */
@@ -314,7 +326,6 @@ namespace debugchannel {
          *   <ui>json</ui>
          * </ul>
          *
-         * @access public
          * @param string $text  the string which contains the code to syntax highlight
          * @param string $lang  the string that represents the language the $text is in. 
          * some languages will have a slight varient on what its called, ie c++ is cpp.
@@ -338,7 +349,6 @@ namespace debugchannel {
          * the image can be specified by its location in the filesystem or as a base64 encoded string.
          * the following file formats are allowed: jpg, bmp, and png.
          * 
-         * @access public
          * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative. 
          * the string can also contain the image in base64 format.
          * @return D  the instance of D that $this is bound to.
@@ -358,13 +368,14 @@ namespace debugchannel {
          * publishes the message text with a senders name attached.
          * the senderName can be anything, and  does not need to be the same on every consecutive call.
          * 
-         * @access public
          * @param string $message  the string containing the message to publish as IM message
-         * @param string $senderName  the name of the sender that will be displayed next to the message
+         * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
          * @return D  the D instance bound to $this
          */
-        public function chat($message, $senderName="php-client")
+        public function chat($message, $senderName)
         {
+            $senderName = $senderName ? $senderName : self::ANON_IDENTIFIER;
+
             return $this->sendDebug('chat', [$senderName, $message]);
         }
 
@@ -375,13 +386,14 @@ namespace debugchannel {
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
          * if multiple people are viewing the channel in browser then every user will be effected.
          *
-         * @access public
          * @return D  the instance of D bound to $this
          */
         public function clear()
         {
             return $this->sendDebug('clear');
         }
+
+        /**#@-*/
 
 
         private function makePhpRefCall( array $trace, array $args )
