@@ -136,19 +136,6 @@ namespace debugchannel {
         }
 
         /**
-         * Clears the uberdebug window
-         */
-        public function clear()
-        {
-            $this->makeRequest(
-                array(
-                    'handler' => 'clear',
-                    'args' => array()
-                )
-            );
-        }
-
-        /**
          * Handy shortcut fo ->log().
          */
         public function __invoke()
@@ -167,10 +154,69 @@ namespace debugchannel {
          */
         public function log()
         {
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            $this->makePhpRefCall( $trace, func_get_args() );
-            return $this;
+            foreach (func_get_args() as $arg) {
+                $this->explore($arg);
+            }
         }
+
+        public function explore($val)
+        {
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $this->makePhpRefCall( $trace, [$val]);
+            return $this;            
+        }
+
+        public function table(array $table)
+        {
+            return $this->sendDebug('table', [$table]);
+        }
+
+        public function string($text)
+        {
+            return $this->sendDebug('string', text);
+        }
+
+        /**
+         * Syntax highlight a string
+         *
+         * @param string Text to highlight
+         * @param string Language to highlight it as
+         * @param bool Deindent string? This works well for sql
+         */
+        public function code( $text, $lang = 'sql', $deIndent = true )
+        {
+            if( $deIndent ) {
+                $text = $this->deIndent($text);
+            }
+            $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+            return $this->sendDebug('syntaxHighlight', [$text, $lang, $trace]);
+        }
+
+        /** 
+         * renders an image using the identifier.
+         * @param string $identifier either fileName or base64  encoded image
+         */
+        public function image($identifier)
+        {
+            assert(is_string($identifier));
+            $base64 = file_exists($identifier) ? base64_encode(file_get_contents($identifier)) : $identifier;
+            return $this->sendDebug('image', $base64);
+        }
+
+
+        public function chat($message, $senderName="php-client")
+        {
+            return $this->sendDebug('chat', [$senderName, $message]);
+        }
+
+        /**
+         * Clears the uberdebug window
+         */
+        public function clear()
+        {
+            return $this->sendDebug('clear');
+        }
+
 
         private function makePhpRefCall( array $trace, array $args )
         {
@@ -187,49 +233,23 @@ namespace debugchannel {
                 $ref->query( $arg, null );
                 $html = ob_get_clean();
 
-                $this->makeRequest(
-                    array(
-                        'handler' => 'php-ref',
-                        'args' => array(
-                            $html,
-                            $trace
-                        ),
-                        'stacktrace' => [],
-                        'timestamp' => $this->getTime()
-                    )
-                );
+                $this->sendDebug('php-ref', [$html, $trace]);
             }
 
             $this->setRefConfig($originalRefOptions);
         }
 
-        /**
-         * Syntax highlight a string
-         *
-         * @param string Text to highlight
-         * @param string Language to highlight it as
-         * @param bool Deindent string? This works well for sql
-         */
-        public function syntaxHighlight( $text, $lang = 'sql', $deIndent = true )
+        private function sendDebug ($handler, $args=[], $stacktrace=[])
         {
-
-            if( $deIndent ) {
-                $text = $this->deIndent($text);
-            }
-
-            $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-
             $this->makeRequest(
                 array(
-                    'handler' => 'syntaxHighlight',
-                    'args' => array(
-                        $text,
-                        $lang,
-                        $trace,
-                    )
+                    'handler' => $handler,
+                    'args' => is_array($args) ? $args : [$args],
+                    'stacktrace' => $stacktrace,
+                    'timestamp' => $this->getTime()
                 )
             );
-
+            return $this;
         }
 
         private function makeRequest( $data )
