@@ -188,7 +188,7 @@ namespace debugchannel {
          * cells are primtives.
          * 
          * @access public
-         * @param array $table a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
+         * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
          * @return D the D instance bound to $this
          */
         public function table(array $table)
@@ -203,7 +203,7 @@ namespace debugchannel {
          * it cannot be null, and cannot be any other primtive such as int. 
          *
          * @access public
-         * @param string $text the string to publish as raw text
+         * @param string $text  the string to publish as raw text
          * @return D the D instance bound to $this.
          */
         public function string($text)
@@ -212,11 +212,31 @@ namespace debugchannel {
         }
 
         /**
-         * Syntax highlight a string
+         * publishes a string with syntax highlighting for the given language.
          *
-         * @param string Text to highlight
-         * @param string Language to highlight it as
-         * @param bool Deindent string? This works well for sql
+         * the string is treaded as code and highlighed and formatted for that given language.
+         * the complete list of languages that are supported are available <a href="https://github.com/isagalaev/highlight.js/tree/master/src/languages">here</a>.
+         * this list includes: 
+         * <ul>
+         *   <ui>bash</ui>
+         *   <ui>cpp(c++)</ui>
+         *   <ui>cs(c#)</ui>
+         *   <ui>java</ui>
+         *   <ui>javascript<ui>
+         *   <ui>python</ui>
+         *   <ui>php</ui>
+         *   <ui>sql</ui>
+         *   <ui>xml</ui>
+         *   <ui>json</ui>
+         * </ul>
+         *
+         * @access public
+         * @param string $text  the string which contains the code to syntax highlight
+         * @param string $lang  the string that represents the language the $text is in. 
+         * some languages will have a slight varient on what its called, ie c++ is cpp.
+         * Default sql.
+         * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
+         * @return D  the instance of D that $this is bound to.
          */
         public function code( $text, $lang = 'sql', $deIndent = true )
         {
