@@ -248,8 +248,16 @@ namespace debugchannel {
         }
 
         /** 
-         * renders an image using the identifier.
-         * @param string $identifier either fileName or base64  encoded image
+         * publishes an image to the browser.
+         *
+         * encodes an image in using base64 encoding to be rendered as an image resized to fit the debug box.
+         * the image can be specified by its location in the filesystem or as a base64 encoded string.
+         * the following file formats are allowed: jpg, bmp, and png.
+         * 
+         * @access public
+         * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative. 
+         * the string can also contain the image in base64 format.
+         * @return D  the instance of D that $this is bound to.
          */
         public function image($identifier)
         {
@@ -257,7 +265,6 @@ namespace debugchannel {
             $base64 = file_exists($identifier) ? base64_encode(file_get_contents($identifier)) : $identifier;
             return $this->sendDebug('image', $base64);
         }
-
 
         public function chat($message, $senderName="php-client")
         {
