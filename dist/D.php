@@ -196,6 +196,16 @@ namespace debugchannel {
             return $this->sendDebug('table', [$table]);
         }
 
+        /**
+         * publishes a raw string as is
+         *
+         * the string is publishes as a plain string without formatting.
+         * it cannot be null, and cannot be any other primtive such as int. 
+         *
+         * @access public
+         * @param string $text the string to publish as raw text
+         * @return D the D instance bound to $this.
+         */
         public function string($text)
         {
             return $this->sendDebug('string', text);
