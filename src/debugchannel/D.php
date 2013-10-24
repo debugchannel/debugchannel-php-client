@@ -292,7 +292,14 @@ namespace debugchannel {
         }
 
         /**
-         * Clears the uberdebug window
+         * removes all debugs in the channel for all users
+         * 
+         * can be called at any point, event if there are no debugs in the channel.
+         * if multiple clients are publishing to the same channel, this will remove their debugs as well.
+         * if multiple people are viewing the channel in browser then every user will be effected.
+         *
+         * @access public
+         * @return D  the instance of D bound to $this
          */
         public function clear()
         {
