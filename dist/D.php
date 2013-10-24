@@ -14,6 +14,11 @@ namespace debugchannel {
         const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
         const NO_IDENTIFIER = '__NONE__';
 
+
+        /**#@+
+         * @access private
+         */
+
         /**
          * @var string Hostname of the uberdebugging server. Think, 'localhost' or '192.168.2.17'
          */
@@ -58,6 +63,8 @@ namespace debugchannel {
          * @var int
          */
         private static $messageSequenceNo;
+
+        /**#@-*/
 
         /**
          * Standard constructor, blah blah
@@ -266,13 +273,33 @@ namespace debugchannel {
             return $this->sendDebug('image', $base64);
         }
 
+
+        /**
+         * publishes a messages like a chat message in an IM client.
+         * 
+         * 
+         * publishes the message text with a senders name attached.
+         * the senderName can be anything, and  does not need to be the same on every consecutive call.
+         * 
+         * @access public
+         * @param string $message  the string containing the message to publish as IM message
+         * @param string $senderName  the name of the sender that will be displayed next to the message
+         * @return D  the D instance bound to $this
+         */
         public function chat($message, $senderName="php-client")
         {
             return $this->sendDebug('chat', [$senderName, $message]);
         }
 
         /**
-         * Clears the uberdebug window
+         * removes all debugs in the channel for all users
+         * 
+         * can be called at any point, event if there are no debugs in the channel.
+         * if multiple clients are publishing to the same channel, this will remove their debugs as well.
+         * if multiple people are viewing the channel in browser then every user will be effected.
+         *
+         * @access public
+         * @return D  the instance of D bound to $this
          */
         public function clear()
         {

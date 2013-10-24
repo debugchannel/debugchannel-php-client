@@ -14,6 +14,11 @@ namespace debugchannel {
         const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
         const NO_IDENTIFIER = '__NONE__';
 
+
+        /**#@+
+         * @access private
+         */
+
         /**
          * @var string Hostname of the uberdebugging server. Think, 'localhost' or '192.168.2.17'
          */
@@ -58,6 +63,8 @@ namespace debugchannel {
          * @var int
          */
         private static $messageSequenceNo;
+
+        /**#@-*/
 
         /**
          * Standard constructor, blah blah
