@@ -14,8 +14,19 @@ namespace debugchannel {
         const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
         const NO_IDENTIFIER = '__NONE__';
 
+
+        /**#@+
+         * @access private
+         */
+
         /**
-         * @var string Hostname of the uberdebugging server. Think, 'localhost' or '192.168.2.17'
+         * address of debug channel server 
+         * 
+         * potential values would be localhost, 192.168.2.17, 127.0.0.1.
+         * either domain names or ip addresses can be used.
+         *
+         * @var string 
+         * 
          */
         private $host;
 
@@ -59,11 +70,84 @@ namespace debugchannel {
          */
         private static $messageSequenceNo;
 
+        /**#@-*/
+
         /**
-         * Standard constructor, blah blah
-         * @param string Hostname
-         * @param string Channel
-         * @param array ref options. See, ref.php for list of allowed options
+         * Create a D object bound to a specific channel and server.
+         *
+         * options can be provided which customize how explore works. 
+         * the options available are:
+         * <table>
+         * <thead><tr>
+         * <th align="left">Option</th>
+         * <th align="left">Default</th>
+         * <th align="left">Description</th>
+         * </tr></thead>
+         * <tbody>
+         * <tr>
+         * <td align="left"><code>'expLvl'</code></td>
+         * <td align="left"><code>1</code></td>
+         * <td align="left">Initially expanded levels (for HTML mode only). A negative value will expand all levels</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'maxDepth'</code></td>
+         * <td align="left"><code>6</code></td>
+         * <td align="left">Maximum depth (<code>0</code> to disable); note that disabling it or setting a high value can produce a 100+ MB page when input involves large data</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showIteratorContents'</code></td>
+         * <td align="left"><code>FALSE</code></td>
+         * <td align="left">Display iterator data (keys and values)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showResourceInfo'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Display additional information about resources</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showMethods'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Display methods and parameter information on objects</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showPrivateMembers'</code></td>
+         * <td align="left"><code>FALSE</code></td>
+         * <td align="left">Include private properties and methods</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showStringMatches'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Perform and display string matches for dates, files, json strings, serialized data, regex patterns etc. (SLOW)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'formatters'</code></td>
+         * <td align="left"><code>array()</code></td>
+         * <td align="left">Custom/external formatters (as associative array: format =&gt; className)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'shortcutFunc'</code></td>
+         * <td align="left"><code>array('r', 'rt')</code></td>
+         * <td align="left">Shortcut functions used to detect the input expression. If they are namespaced, the namespace must be present as well (methods are not  supported)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'stylePath'</code></td>
+         * <td align="left"><code>'{:dir}/ref.css'</code></td>
+         * <td align="left">Local path to a custom stylesheet (HTML only); <code>FALSE</code> means that no CSS is included.</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'scriptPath'</code></td>
+         * <td align="left"><code>'{:dir}/ref.js'</code></td>
+         * <td align="left">Local path to a custom javascript (HTML only); <code>FALSE</code> means no javascript (tooltips / toggle / kbd shortcuts require JS)</td>
+         * </tr>
+         * </tbody>
+         * </table>
+         * 
+         * @access public
+         * @param string $host  the string is the address of debug channel server
+         * @param string $channel  the channel to publish all messages on
+         * @param string $apiKey the apiKey of the user who is publishing the messages. default is null.
+         * @param array $options  options array to configure the way explore traverses the object graph and renders it.
+         *
          */
         public function __construct( $host, $channel, $apiKey = null, array $options = ["showPrivateMembers" => true, "expLvl" => 3] )
         {
@@ -159,6 +243,17 @@ namespace debugchannel {
             }
         }
 
+        /**
+         * publishes an interactable object graph
+         *
+         * if val is an object or array it will generate an object graph.
+         * if val is a primitive such as int, string, etc then it just displays the value. 
+         * It can detect recursion, replacing the reference with a "RECURSION" string.
+         * $val is not modified.
+         * @access public
+         * @param mixed $val  the mixed value to publish
+         * @return D  the D object bound to $this
+         */
         public function explore($val)
         {
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
@@ -166,22 +261,66 @@ namespace debugchannel {
             return $this;            
         }
 
+        /**
+         * publishes the 2-dimensional array as a table
+         *
+         * given a 2-dimensional array, treat it as a table when rendering it.
+         * In the browser it will be shown as a table, with the first dimension being 
+         * the rows, and the second dimension being columns.
+         * The values of each cell should be primtives, ie string, int, etc but can be objects.
+         * the exact method of displaying the objects is undefined hence it is advised that the 
+         * cells are primtives.
+         * 
+         * @access public
+         * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
+         * @return D the D instance bound to $this
+         */
         public function table(array $table)
         {
             return $this->sendDebug('table', [$table]);
         }
 
+        /**
+         * publishes a raw string as is
+         *
+         * the string is publishes as a plain string without formatting.
+         * it cannot be null, and cannot be any other primtive such as int. 
+         *
+         * @access public
+         * @param string $text  the string to publish as raw text
+         * @return D the D instance bound to $this.
+         */
         public function string($text)
         {
             return $this->sendDebug('string', text);
         }
 
         /**
-         * Syntax highlight a string
+         * publishes a string with syntax highlighting for the given language.
          *
-         * @param string Text to highlight
-         * @param string Language to highlight it as
-         * @param bool Deindent string? This works well for sql
+         * the string is treaded as code and highlighed and formatted for that given language.
+         * the complete list of languages that are supported are available <a href="https://github.com/isagalaev/highlight.js/tree/master/src/languages">here</a>.
+         * this list includes: 
+         * <ul>
+         *   <ui>bash</ui>
+         *   <ui>cpp(c++)</ui>
+         *   <ui>cs(c#)</ui>
+         *   <ui>java</ui>
+         *   <ui>javascript<ui>
+         *   <ui>python</ui>
+         *   <ui>php</ui>
+         *   <ui>sql</ui>
+         *   <ui>xml</ui>
+         *   <ui>json</ui>
+         * </ul>
+         *
+         * @access public
+         * @param string $text  the string which contains the code to syntax highlight
+         * @param string $lang  the string that represents the language the $text is in. 
+         * some languages will have a slight varient on what its called, ie c++ is cpp.
+         * Default sql.
+         * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
+         * @return D  the instance of D that $this is bound to.
          */
         public function code( $text, $lang = 'sql', $deIndent = true )
         {
@@ -193,8 +332,16 @@ namespace debugchannel {
         }
 
         /** 
-         * renders an image using the identifier.
-         * @param string $identifier either fileName or base64  encoded image
+         * publishes an image to the browser.
+         *
+         * encodes an image in using base64 encoding to be rendered as an image resized to fit the debug box.
+         * the image can be specified by its location in the filesystem or as a base64 encoded string.
+         * the following file formats are allowed: jpg, bmp, and png.
+         * 
+         * @access public
+         * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative. 
+         * the string can also contain the image in base64 format.
+         * @return D  the instance of D that $this is bound to.
          */
         public function image($identifier)
         {
@@ -204,13 +351,32 @@ namespace debugchannel {
         }
 
 
+        /**
+         * publishes a messages like a chat message in an IM client.
+         * 
+         * 
+         * publishes the message text with a senders name attached.
+         * the senderName can be anything, and  does not need to be the same on every consecutive call.
+         * 
+         * @access public
+         * @param string $message  the string containing the message to publish as IM message
+         * @param string $senderName  the name of the sender that will be displayed next to the message
+         * @return D  the D instance bound to $this
+         */
         public function chat($message, $senderName="php-client")
         {
             return $this->sendDebug('chat', [$senderName, $message]);
         }
 
         /**
-         * Clears the uberdebug window
+         * removes all debugs in the channel for all users
+         * 
+         * can be called at any point, event if there are no debugs in the channel.
+         * if multiple clients are publishing to the same channel, this will remove their debugs as well.
+         * if multiple people are viewing the channel in browser then every user will be effected.
+         *
+         * @access public
+         * @return D  the instance of D bound to $this
          */
         public function clear()
         {
