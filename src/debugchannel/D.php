@@ -169,9 +169,16 @@ namespace debugchannel {
         }
 
         /**
-         * Magic getter.
-         * @param string propertyName
-         * @return mixed
+         * provides getter methods for all properties private and public.
+         *
+         * all properties will get a a getter method.
+         * for exmaple the private property $name of type string 
+         * will get a getter method with the signature:
+         * <pre><code>public function name() :: string</code></pre>
+         *
+         * @param string $property  the string which represents the name of the property to reuturn.
+         * @return mixed  value of property
+         * @throws \InvalidArgumentException when no property exists with the name.
          */
         public function __get( $property )
         {
