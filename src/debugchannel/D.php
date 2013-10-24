@@ -158,10 +158,6 @@ namespace debugchannel {
             return $this;
         }
 
-        public function getTime()
-        {
-        	return microtime(true);
-        }
 
         /**
          * Debug a arbritary number of objects
@@ -236,7 +232,7 @@ namespace debugchannel {
 
         }
 
-        public function makeRequest( $data )
+        private function makeRequest( $data )
         {
             // add apiKey to request if set
             if( null !== $this->apiKey ) {
@@ -265,6 +261,11 @@ namespace debugchannel {
 
             return $curlInfo;
 
+        }
+
+        private function getTime()
+        {
+            return microtime(true);
         }
 
         /**
