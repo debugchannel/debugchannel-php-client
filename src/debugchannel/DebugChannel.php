@@ -402,7 +402,7 @@ class DebugChannel
      * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
      * @return DebugChannel  the DebugChannel instance bound to $this.
      */
-    public function chat($message, $senderName)
+    public function chat($message, $senderName=null)
     {
         $senderName = $senderName ? $senderName : self::ANON_IDENTIFIER;
 
@@ -485,7 +485,7 @@ class DebugChannel
             throw new \Exception($response);
         }
 
-        return $curlInfo;
+        return $this;
 
     }
 
