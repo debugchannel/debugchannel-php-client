@@ -222,7 +222,7 @@ class DebugChannel
      *
      * @return array   associative array of options mapping option name to option value
      */
-    private function getPhpRefOptions()
+    protected function getPhpRefOptions()
     {
         $phpRefOptions = array_intersect_key(
             $this->options,
@@ -425,7 +425,7 @@ class DebugChannel
 
     /**#@-*/
 
-    private function sendDebug ($handler, $args = array(), $stacktrace = array())
+    protected function sendDebug ($handler, $args = array(), $stacktrace = array())
     {
         $this->makeRequest(
             array(
@@ -437,7 +437,7 @@ class DebugChannel
         return $this;
     }
 
-    private function filloutRequest( array $data )
+    protected function filloutRequest( array $data )
     {
 
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
@@ -463,7 +463,7 @@ class DebugChannel
 
     }
 
-    private function makeRequest( $data )
+    protected function makeRequest( $data )
     {
 
         $data = $this->filloutRequest($data);
@@ -493,7 +493,7 @@ class DebugChannel
      * Get client identifier
      * @return bool|string
      */
-    private function getIdentifier()
+    protected function getIdentifier()
     {
         switch( $options['identifier'] ) {
             case self::ANON_IDENTIFIER:
@@ -506,7 +506,7 @@ class DebugChannel
         return $options['identifier'];
     }
 
-    private function setRefConfig( array $options )
+    protected function setRefConfig( array $options )
     {
         $output = array();
         foreach( $options as $option => $value ) {
@@ -516,7 +516,7 @@ class DebugChannel
         return $output;
     }
 
-    private function formatTrace( $trace )
+    protected function formatTrace( $trace )
     {
         return array_map(
             function ( $component ) {
@@ -538,7 +538,7 @@ class DebugChannel
          );
     }
 
-    private function deIndent( $text )
+    protected function deIndent( $text )
     {
         $leadingWhitespace = array();
         $text = explode("\n", $text);
@@ -554,7 +554,7 @@ class DebugChannel
         return implode("\n", $text);
     }
 
-    private function getInfoArray()
+    protected function getInfoArray()
     {
         return array(
             'machineId' => $this->getMachineId(),
@@ -564,7 +564,7 @@ class DebugChannel
         );
     }
 
-    private function getPid()
+    protected function getPid()
     {
         // process information
         if( !isset(self::$pid) ) {
@@ -574,7 +574,7 @@ class DebugChannel
         return self::$pid;
     }
 
-    private function getMachineId()
+    protected function getMachineId()
     {
         if( !isset(self::$machineId) ) {
             self::$machineId = php_uname('n');
