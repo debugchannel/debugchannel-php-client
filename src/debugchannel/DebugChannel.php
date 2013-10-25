@@ -585,7 +585,7 @@ class DebugChannel
 // now with added deprecated message
 class D extends DebugChannel
 {
-    private function filloutRequest( array $data )
+    protected function filloutRequest( array $data )
     {
         $data = parent::filloutRequest($data);
         $data['deprecated'] = true;
