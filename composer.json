@@ -11,7 +11,7 @@
         "php": ">=5.5",
         "andyhu/php-ref": "dev-master",
 	"phpdocumentor/phpdocumentor": "v2.1.0",
-	"hpdocumentor/template-abstract": "1.2.1"
+	"phpdocumentor/template-abstract": "1.2.1"
     },
     "config": {
         "process-timeout": 10000
