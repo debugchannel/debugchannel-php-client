@@ -3,13 +3,12 @@
     "license": "AFFERO",
     "type": "project",
     "autoload": {
-        "psr-0": { 
+        "psr-0": {
         	"": "src/"
         }
     },
     "require": {
-        "php": ">=5.5",
-        "andyhu/php-ref": "dev-master"
+        "php": ">=5.3"
     },
     "config": {
         "process-timeout": 10000

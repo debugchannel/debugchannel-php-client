@@ -2,8 +2,6 @@
 
 namespace debugchannel {
 
-  use ref;
-
   // modified version of RHtmlFormatter which doesn't have the nesting bug
   // ideally this should be fixed upstream
   // see RHtmlFormatter
@@ -12,7 +10,7 @@ namespace debugchannel {
    * Generates the output in HTML5 format
    */
 
-  class RHtmlSpanFormatter extends \RFormatter{
+  class RHtmlSpanFormatter extends RFormatter{
 
     public
 
