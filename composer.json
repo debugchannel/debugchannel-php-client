@@ -3,13 +3,14 @@
     "license": "AFFERO",
     "type": "project",
     "autoload": {
-        "psr-0": { 
+        "psr-0": {
         	"": "src/"
         }
     },
     "require": {
-        "php": ">=5.5",
-        "andyhu/php-ref": "dev-master"
+        "php": ">=5.3"
+    	"phpdocumentor/phpdocumentor": "v2.1.0",
+        "phpdocumentor/template-abstract": "1.2.1"
     },
     "config": {
         "process-timeout": 10000
