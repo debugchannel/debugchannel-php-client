@@ -8,7 +8,7 @@ namespace debugchannel {
      * @version  1.0
      * @author   digitalnature - http://digitalnature.eu
      */
-    class ref {
+    class Ref {
 
       const MARKER_KEY = '_phpRefArrayMarker_';
 
