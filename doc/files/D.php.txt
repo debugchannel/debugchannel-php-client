@@ -2,32 +2,35 @@
 
 namespace debugchannel {
 
+    use ref;
+
     /**
-     * PHP client for debugchannel
+     * PHP counterpart for uberdebug
      */
     class D
     {
 
         /**
          * default value for senderName when sending chat messages.
-         * @const ANON_IDENtIFIER
+         * @const ANON_IDENtIFIER 
          */
         const ANON_IDENTIFIER = 'PHP-client';
         const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
         const NO_IDENTIFIER = '__NONE__';
+
 
         /**#@+
          * @access private
          */
 
         /**
-         * address of debug channel server
-         *
+         * address of debug channel server 
+         * 
          * potential values would be localhost, 192.168.2.17, 127.0.0.1.
          * either domain names or ip addresses can be used.
          *
-         * @var string
-         *
+         * @var string 
+         * 
          */
         private $host;
 
@@ -45,8 +48,8 @@ namespace debugchannel {
          * See, Allowed options include the phpRef ones below
          */
         private $options = array(
-            "showPrivateMembers" => true,
-            "expLvl" => 1,
+            "showPrivateMembers" => true, 
+            "expLvl" => 1, 
             "maxDepth" => 3
         );
 
@@ -83,7 +86,7 @@ namespace debugchannel {
         /**
          * Create a D object bound to a specific channel and server.
          *
-         * options can be provided which customize how explore works.
+         * options can be provided which customize how explore works. 
          * the options available are:
          * <table>
          * <thead><tr>
@@ -149,7 +152,7 @@ namespace debugchannel {
          * </tr>
          * </tbody>
          * </table>
-         *
+         * 
          * @param string $host  the string is the address of debug channel server
          * @param string $channel  the channel to publish all messages on
          * @param string $apiKey the apiKey of the user who is publishing the messages. default is null.
@@ -171,13 +174,13 @@ namespace debugchannel {
          * provides getter methods for all properties private and public
          *
          * all properties will get a a getter method.
-         * for exmaple the private property $name of type string
+         * for exmaple the private property $name of type string 
          * will get a getter method with the signature:
          * <pre><code>public function name() :: string</code></pre>
          *
          * @param string $property  the string which represents the name of the property to reuturn.
          * @return mixed  value of property
-         * @deprecated use the explicit getter methods.
+         * @deprecated use the explicit getter methods. 
          * @throws \InvalidArgumentException when no property exists with the name.
          */
         public function __get( $property )
@@ -197,9 +200,9 @@ namespace debugchannel {
          *   <li>logs</li>
          *   <li>project/team/chat</li>
          * </ul>
-         *
+         * 
          * @param string $channel  Channel to use
-         * @return debugchannel\D
+         * @return Bond\D
          */
         public function setChannel( $channel )
         {
@@ -209,9 +212,9 @@ namespace debugchannel {
 
         /**
          * Set phpref options that will be used by this instance of D
-         *
+         * 
          * @param array $options  the associtivate array of options, available options specified in constructors documentation.
-         * @return debugchannel\D
+         * @return Bond\D
          */
         public function setOptions( array $options )
         {
@@ -261,7 +264,7 @@ namespace debugchannel {
          * Debug a arbritary number of objects
          *
          * @param mixed Item to debug
-         * @deprecated use the explicit getter methods.
+         * @deprecated use the explicit getter methods. 
          * @param ...
          */
         public function log()
@@ -275,7 +278,7 @@ namespace debugchannel {
          * publishes an interactable object graph
          *
          * if val is an object or array it will generate an object graph.
-         * if val is a primitive such as int, string, etc then it just displays the value.
+         * if val is a primitive such as int, string, etc then it just displays the value. 
          * It can detect recursion, replacing the reference with a "RECURSION" string.
          * $val is not modified.
          * @param mixed $val  the mixed value to publish
@@ -285,40 +288,39 @@ namespace debugchannel {
         {
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $this->makePhpRefCall( $trace, [$val]);
-            return $this;
+            return $this;            
         }
 
         /**
          * publishes the 2-dimensional array as a table
          *
          * given a 2-dimensional array, treat it as a table when rendering it.
-         * In the browser it will be shown as a table, with the first dimension being
+         * In the browser it will be shown as a table, with the first dimension being 
          * the rows, and the second dimension being columns.
          * The values of each cell should be primtives, ie string, int, etc but can be objects.
-         * the exact method of displaying the objects is undefined hence it is advised that the
+         * the exact method of displaying the objects is undefined hence it is advised that the 
          * cells are primtives.
-         *
+         * 
          * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
          * @return D the D instance bound to $this
          */
         public function table(array $table)
         {
-            //TODO - check this is two dimensional
-            return $this->sendDebug('table', array($table));
+            return $this->sendDebug('table', [$table]);
         }
 
         /**
          * publishes a raw string as is
          *
          * the string is publishes as a plain string without formatting.
-         * it cannot be null, and cannot be any other primtive such as int.
+         * it cannot be null, and cannot be any other primtive such as int. 
          *
          * @param string $text  the string to publish as raw text
          * @return D the D instance bound to $this.
          */
         public function string($text)
         {
-            return $this->sendDebug('string', $text);
+            return $this->sendDebug('string', text);
         }
 
         /**
@@ -326,7 +328,7 @@ namespace debugchannel {
          *
          * the string is treaded as code and highlighed and formatted for that given language.
          * the complete list of languages that are supported are available <a href="https://github.com/isagalaev/highlight.js/tree/master/src/languages">here</a>.
-         * this list includes:
+         * this list includes: 
          * <ul>
          *   <ui>bash</ui>
          *   <ui>cpp(c++)</ui>
@@ -341,7 +343,7 @@ namespace debugchannel {
          * </ul>
          *
          * @param string $text  the string which contains the code to syntax highlight
-         * @param string $lang  the string that represents the language the $text is in.
+         * @param string $lang  the string that represents the language the $text is in. 
          * some languages will have a slight varient on what its called, ie c++ is cpp.
          * Default sql.
          * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
@@ -353,17 +355,17 @@ namespace debugchannel {
                 $text = $this->deIndent($text);
             }
             $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace));
+            return $this->sendDebug('syntaxHighlight', [$text, $lang, $trace]);
         }
 
-        /**
+        /** 
          * publishes an image to the browser.
          *
          * encodes an image in using base64 encoding to be rendered as an image resized to fit the debug box.
          * the image can be specified by its location in the filesystem or as a base64 encoded string.
          * the following file formats are allowed: jpg, bmp, and png.
-         *
-         * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative.
+         * 
+         * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative. 
          * the string can also contain the image in base64 format.
          * @return D  the instance of D that $this is bound to.
          */
@@ -377,11 +379,11 @@ namespace debugchannel {
 
         /**
          * publishes a messages like a chat message in an IM client.
-         *
-         *
+         * 
+         * 
          * publishes the message text with a senders name attached.
          * the senderName can be anything, and  does not need to be the same on every consecutive call.
-         *
+         * 
          * @param string $message  the string containing the message to publish as IM message
          * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
          * @return D  the D instance bound to $this
@@ -395,7 +397,7 @@ namespace debugchannel {
 
         /**
          * removes all debugs in the channel for all users
-         *
+         * 
          * can be called at any point, event if there are no debugs in the channel.
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
          * if multiple people are viewing the channel in browser then every user will be effected.
@@ -408,6 +410,7 @@ namespace debugchannel {
         }
 
         /**#@-*/
+
 
         private function makePhpRefCall( array $trace, array $args )
         {
@@ -436,7 +439,8 @@ namespace debugchannel {
                 array(
                     'handler' => $handler,
                     'args' => is_array($args) ? $args : [$args],
-                    'stacktrace' => $stacktrace
+                    'stacktrace' => $stacktrace,
+                    'timestamp' => $this->getTime()
                 )
             );
             return $this;
