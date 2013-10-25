@@ -6,7 +6,6 @@ use debugchannel\D;
 use debugchannel\RHtmlSpanFormatter;
 use debugchannel\LanguageAgnosticParser;
 
-// class DTest extends \Bond\Normality\Tests\NormalityProvider
 class DTest extends \PHPUnit_Framework_Testcase
 {
 
@@ -45,6 +44,7 @@ class DTest extends \PHPUnit_Framework_Testcase
         $this->d->log("testLog");
     }
 
+    /*
     public function powerset (array $items)
     {
         if(count($items) == 0) return [[]];
@@ -55,14 +55,14 @@ class DTest extends \PHPUnit_Framework_Testcase
         return array_merge(
             $permutations,
             array_map(
-                    function($set)use($first){return array_merge($set, [$first]);},
-                    $permutations
-                )
+                function($set)use($first){return array_merge($set, [$first]);},
+                $permutations
+            )
         );
     }
 
 
-    public function provideValidLogObjects()
+    public function testProvideValidLogObjects()
     {
         $items = [
             0,
@@ -80,12 +80,18 @@ class DTest extends \PHPUnit_Framework_Testcase
         return $permutations;
     }
 
-    /** @dataProvider provideValidLogObjects */
     public function testLogIntegerDoesNotThrowException()
     {
-        // print_r(func_get_args());
-        call_user_func_array([$this->d, "log"], func_get_args());
+
+        $set = $this->testProvideValidLogObjects();
+        foreach( $this->testProvideValidLogObjects() as $args ) {
+            call_user_func_array(
+                [$this->d, "log"],
+                $args
+            );
+        }
     }
+    */
 
     public function testInvoke()
     {
@@ -121,7 +127,6 @@ class DTest extends \PHPUnit_Framework_Testcase
     {
         $this->d->chat('Hi');
     }
-
 
 /*
     private function getSimpleObject()

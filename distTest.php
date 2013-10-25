@@ -1,9 +1,9 @@
 <?php
 
-use debugchannel\D;
+use debugchannel\DebugChannel;
 
-require __DIR__ ."/dist/D.php";
+require __DIR__ ."/dist/DebugChannel.php";
 
-$d = new D('localhost', 'disttest');
+$d = new DebugChannel('localhost', 'disttest');
 
 $d->explore("something");

@@ -5,7 +5,7 @@ namespace debugchannel {
     /**
      * PHP client for debugchannel
      */
-    class D
+    class DebugChannel
     {
 
         /**
@@ -78,9 +78,8 @@ namespace debugchannel {
          * @access public
          */
 
-
         /**
-         * Create a D object bound to a specific channel and server.
+         * Create a DebugChannel object bound to a specific channel and server.
          *
          * options can be provided which customize how explore works.
          * the options available are:
@@ -198,7 +197,7 @@ namespace debugchannel {
          * </ul>
          *
          * @param string $channel  Channel to use
-         * @return debugchannel\D
+         * @return debugChannel\DebugChannel
          */
         public function setChannel( $channel )
         {
@@ -207,10 +206,10 @@ namespace debugchannel {
         }
 
         /**
-         * Set phpref options that will be used by this instance of D.
+         * set phpref options that will be used by this instance of D
          *
-         * @param array $options  The associtivate array of options, available options specified in constructors documentation.
-         * @return debugchannel\D
+         * @param array $options  the associtivate array of options, available options specified in constructors documentation
+         * @return debugChannel\DebugChannel
          */
         public function setOptions( array $options )
         {
@@ -248,6 +247,7 @@ namespace debugchannel {
 
         /**
          * Alias for ->explore().
+         * @see debugchannel\DebugChannel
          */
         public function __invoke( $dataToLog, array $tags = array() )
         {
@@ -258,17 +258,15 @@ namespace debugchannel {
         }
 
         /**
-         * Debug a arbritary number of objects
-         *
-         * @param mixed Item to debug
-         * @deprecated use the explicit getter methods.
-         * @param ...
+         * Alias for ->explore().
+         * @see debugchannel\DebugChannel
          */
         public function log( $dataToLog, array $tags = array() )
         {
-            foreach (func_get_args() as $arg) {
-                $this->explore($arg);
-            }
+            return call_user_func(
+                array( $this, 'log'),
+                func_get_args()
+            );
         }
 
         /**
@@ -279,12 +277,30 @@ namespace debugchannel {
          * It can detect recursion, replacing the reference with a "RECURSION" string.
          * $val is not modified.
          * @param mixed $val  the mixed value to publish
-         * @return D  the D object bound to $this
+         * @return DebugChannel  the DebugChannel object bound to $this
          */
-        public function explore($val)
+        public function log( $dataToLog, array $tags = array() )
         {
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            $this->makePhpRefCall( $trace, [$val]);
+            $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
+
+            // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
+            $ref = new ref(new RHtmlSpanFormatter());
+
+            ob_start();
+            $ref->query( $arg, null );
+            $html = ob_get_clean();
+
+            $this->makeRequest(
+                array(
+                    'handler' => 'php-ref',
+                    'args' => array(
+                        $html,
+                    ),
+                    'tags' => $tags,
+                )
+            );
+
+            $this->setRefConfig($originalRefOptions);
             return $this;
         }
 
@@ -299,7 +315,7 @@ namespace debugchannel {
          * cells are primtives.
          *
          * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
-         * @return D the D instance bound to $this
+         * @return DebugChannel  the DebugChannel instance bound to $this
          */
         public function table(array $table)
         {
@@ -314,7 +330,7 @@ namespace debugchannel {
          * it cannot be null, and cannot be any other primtive such as int.
          *
          * @param string $text  the string to publish as raw text
-         * @return D the D instance bound to $this.
+         * @return DebugChannel the DebugChannel instance bound to $this.
          */
         public function string($text)
         {
@@ -345,7 +361,7 @@ namespace debugchannel {
          * some languages will have a slight varient on what its called, ie c++ is cpp.
          * Default sql.
          * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
-         * @return D  the instance of D that $this is bound to.
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function code( $text, $lang = 'sql', $deIndent = true )
         {
@@ -365,7 +381,7 @@ namespace debugchannel {
          *
          * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative.
          * the string can also contain the image in base64 format.
-         * @return D  the instance of D that $this is bound to.
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function image($identifier)
         {
@@ -384,7 +400,7 @@ namespace debugchannel {
          *
          * @param string $message  the string containing the message to publish as IM message
          * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
-         * @return D  the D instance bound to $this
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function chat($message, $senderName)
         {
@@ -400,7 +416,7 @@ namespace debugchannel {
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
          * if multiple people are viewing the channel in browser then every user will be effected.
          *
-         * @return D  the instance of D bound to $this
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function clear()
         {
@@ -408,27 +424,6 @@ namespace debugchannel {
         }
 
         /**#@-*/
-
-        private function makePhpRefCall( array $trace, array $args )
-        {
-
-            $trace = $this->formatTrace($trace);
-            $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
-
-            // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
-            $ref = new ref(new RHtmlSpanFormatter());
-
-            foreach( $args as $arg ) {
-
-                ob_start();
-                $ref->query( $arg, null );
-                $html = ob_get_clean();
-
-                $this->sendDebug('php-ref', [$html, $trace]);
-            }
-
-            $this->setRefConfig($originalRefOptions);
-        }
 
         private function sendDebug ($handler, $args=array(), $stacktrace=array())
         {
@@ -444,6 +439,17 @@ namespace debugchannel {
 
         private function makeRequest( $data )
         {
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            $offset = 0;
+            // this loop construct starts on the second element
+            while( $working = next($trace) and isset($working['class']) and $working['class'] === __CLASS__ ) {
+                $offset++;
+            }
+            // exclude all but the first call to debugchannel\D
+            $data['trace'] = $this->formatTrace( array_slice($trace, $offset) );
+            // tags are a required field
+            $data['tags'] = isset($data['tags']) ? $data['tags'] : array();
+
             // add apiKey to request if set
             if( null !== $this->apiKey ) {
                 $data['apiKey'] = (string) $this->apiKey;
@@ -456,7 +462,7 @@ namespace debugchannel {
             curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
             curl_setopt($ch, CURLOPT_TIMEOUT, 1);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json'] );
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json') );
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data) );
 
             $response = curl_exec($ch);
@@ -471,11 +477,6 @@ namespace debugchannel {
 
             return $curlInfo;
 
-        }
-
-        private function getTime()
-        {
-            return microtime(true);
         }
 
         /**
