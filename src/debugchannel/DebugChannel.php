@@ -7,7 +7,7 @@ namespace debugchannel {
     /**
      * PHP counterpart for uberdebug
      */
-    class D
+    class DebugChannel
     {
 
         /**
@@ -202,7 +202,7 @@ namespace debugchannel {
          * </ul>
          * 
          * @param string $channel  Channel to use
-         * @return Bond\D
+         * @return Bond\DebugChannel
          */
         public function setChannel( $channel )
         {
@@ -214,7 +214,7 @@ namespace debugchannel {
          * Set phpref options that will be used by this instance of D
          * 
          * @param array $options  the associtivate array of options, available options specified in constructors documentation.
-         * @return Bond\D
+         * @return Bond\DebugChannel
          */
         public function setOptions( array $options )
         {
@@ -282,7 +282,7 @@ namespace debugchannel {
          * It can detect recursion, replacing the reference with a "RECURSION" string.
          * $val is not modified.
          * @param mixed $val  the mixed value to publish
-         * @return D  the D object bound to $this
+         * @return DebugChannel  the DebugChannel object bound to $this
          */
         public function explore($val)
         {
@@ -302,7 +302,7 @@ namespace debugchannel {
          * cells are primtives.
          * 
          * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
-         * @return D the D instance bound to $this
+         * @return DebugChannel  the DebugChannel instance bound to $this
          */
         public function table(array $table)
         {
@@ -316,7 +316,7 @@ namespace debugchannel {
          * it cannot be null, and cannot be any other primtive such as int. 
          *
          * @param string $text  the string to publish as raw text
-         * @return D the D instance bound to $this.
+         * @return DebugChannel the DebugChannel instance bound to $this.
          */
         public function string($text)
         {
@@ -347,7 +347,7 @@ namespace debugchannel {
          * some languages will have a slight varient on what its called, ie c++ is cpp.
          * Default sql.
          * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
-         * @return D  the instance of D that $this is bound to.
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function code( $text, $lang = 'sql', $deIndent = true )
         {
@@ -367,7 +367,7 @@ namespace debugchannel {
          * 
          * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative. 
          * the string can also contain the image in base64 format.
-         * @return D  the instance of D that $this is bound to.
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function image($identifier)
         {
@@ -386,7 +386,7 @@ namespace debugchannel {
          * 
          * @param string $message  the string containing the message to publish as IM message
          * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
-         * @return D  the D instance bound to $this
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function chat($message, $senderName)
         {
@@ -402,7 +402,7 @@ namespace debugchannel {
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
          * if multiple people are viewing the channel in browser then every user will be effected.
          *
-         * @return D  the instance of D bound to $this
+         * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function clear()
         {
