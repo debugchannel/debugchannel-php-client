@@ -3,7 +3,7 @@
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 destfile=dist/DebugChannel.php
 srcprefix=src/debugchannel/
-srcfiles=(DebugChannel.php RHtmlSpanFormatter.php ref.php)
+srcfiles=(DebugChannel.php RHtmlSpanFormatter.php Ref.php)
 
 rm $destfile
 touch $destfile

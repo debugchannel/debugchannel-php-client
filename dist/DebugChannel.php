@@ -284,7 +284,7 @@ namespace debugchannel {
             $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
 
             // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
-            $ref = new ref(new RHtmlSpanFormatter());
+            $ref = new Ref(new RHtmlSpanFormatter());
 
             ob_start();
             $ref->query( $dataToLog, null );
@@ -960,7 +960,7 @@ namespace debugchannel {
      * @version  1.0
      * @author   digitalnature - http://digitalnature.eu
      */
-    class ref {
+    class Ref {
 
       const MARKER_KEY = '_phpRefArrayMarker_';
 
