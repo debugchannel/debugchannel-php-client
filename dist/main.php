@@ -1,9 +1,9 @@
 <?php
 
-require("D.php");
-use debugchannel\D;
+require("DebugChannel.php");
+use debugchannel\DebugChannel;
 
 
-$d = new D("192.168.2.158", "hello");
+$d = new DebugChannel("192.168.2.158", "hello");
 $d->log("Hello, World!");
 
