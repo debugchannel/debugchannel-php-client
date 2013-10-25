@@ -387,7 +387,6 @@ class DebugChannel
         return $this->sendDebug('image', $base64);
     }
 
-
     /**
      * publishes a messages like a chat message in an IM client.
      *
@@ -478,6 +477,17 @@ class DebugChannel
         // have any problems
         if( $response === false ) {
             throw new \Exception("Unable to connect to debugger as `{$url}`");
+        } elseif ( $curlInfo['http_code'] === 413 ) {
+            // Requested entity too large
+            $additionalInfo = '';
+            if( 'php-ref' === $data['handler'] ) {
+                $phprefOption = $this->getPhpRefOptions();
+                $additionalInfo = sprintf(
+                    "Try lowering the option 'maxDepth' (currently set to %s).",
+                    isset( $phprefOption['maxDepth'] ) ? $phprefOption['maxDepth'] : Ref::config('maxDepth')
+                );
+            }
+            throw new \Exception($response.$additionalInfo);
         } elseif ( $curlInfo['http_code'] !== 200 ) {
             throw new \Exception($response);
         }

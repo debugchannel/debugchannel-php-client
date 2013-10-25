@@ -7,8 +7,7 @@ require __DIR__ ."/src/debugchannel/DebugChannel.php";
 
 $d = new DebugChannel('localhost', 'disttest');
 
-$d->explore("via DebugChannel");
-$d->table([[1,2,3],[1,2,3]]);
-
-$d = new D('localhost', 'disttest');
-$d->explore("via D");
+foreach( range(1,1) as $n ) {
+    $d->explore(str_repeat('! ', 1024*1024 +1 ));
+}
+//$d->explore(range(1,50));
