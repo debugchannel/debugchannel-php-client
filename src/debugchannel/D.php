@@ -48,14 +48,16 @@ namespace debugchannel {
          * See, Allowed options include the phpRef ones below
          */
         private $options = array(
-            'includeSequence' => true,
+            "showPrivateMembers" => true, 
+            "expLvl" => 1, 
+            "maxDepth" => 3
         );
 
         /**
          * List of the options that'll be passed to phpRef
          * @var array
          */
-        private $phpRefOptionsAllowed = ['expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches' ];
+        private $phpRefOptionsAllowed = array('expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches');
 
         /**
          * Private static process identifier
@@ -157,7 +159,7 @@ namespace debugchannel {
          * @param array $options  options array to configure the way explore traverses the object graph and renders it.
          *
          */
-        public function __construct( $host, $channel, $apiKey = null, array $options = ["showPrivateMembers" => true, "expLvl" => 3] )
+        public function __construct( $host, $channel, $apiKey = null, array $options = array() )
         {
             $this->host = (string) $host;
             $this->setChannel($channel);
@@ -169,7 +171,7 @@ namespace debugchannel {
         }
 
         /**
-         * provides getter methods for all properties private and public.
+         * provides getter methods for all properties private and public
          *
          * all properties will get a a getter method.
          * for exmaple the private property $name of type string 
@@ -178,6 +180,7 @@ namespace debugchannel {
          *
          * @param string $property  the string which represents the name of the property to reuturn.
          * @return mixed  value of property
+         * @deprecated use the explicit getter methods. 
          * @throws \InvalidArgumentException when no property exists with the name.
          */
         public function __get( $property )
@@ -190,7 +193,15 @@ namespace debugchannel {
 
         /**
          * Set the channel you with to subscribe to
-         * @param string Channel use use
+         *
+         * the channel is the in form \w+[/\w+]* for example:
+         * <ul>
+         *   <li>hello/world</li>
+         *   <li>logs</li>
+         *   <li>project/team/chat</li>
+         * </ul>
+         * 
+         * @param string $channel  Channel to use
          * @return Bond\D
          */
         public function setChannel( $channel )
@@ -201,18 +212,21 @@ namespace debugchannel {
 
         /**
          * Set phpref options that will be used by this instance of D
-         * @param array
+         * 
+         * @param array $options  the associtivate array of options, available options specified in constructors documentation.
          * @return Bond\D
          */
         public function setOptions( array $options )
         {
-            $this->options = $options;
+            $this->options = array_merge($this->options, $options);
             return $this;
         }
 
         /**
-         * Get options to pass to phpref
-         * @return array
+         * gets the options set
+         *
+         * @return array   associtive array of options mapping option name to option value
+         *
          */
         private function getPhpRefOptions()
         {
@@ -226,8 +240,11 @@ namespace debugchannel {
         }
 
         /**
-         * Get the debug request url
-         * @return string The url where the debugger can be accessed from
+         * get the debug server url
+         *
+         * contains both the host and channel.
+         *
+         * @return string   the string is the url where the debugger can be accessed from
          */
         public function getRequestUrl()
         {
@@ -239,9 +256,7 @@ namespace debugchannel {
          */
         public function __invoke()
         {
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            $this->makePhpRefCall( $trace, func_get_args() );
-            return $this;
+            return call_user_func_array([$this, "log"], func_get_args());
         }
 
 
@@ -249,6 +264,7 @@ namespace debugchannel {
          * Debug a arbritary number of objects
          *
          * @param mixed Item to debug
+         * @deprecated use the explicit getter methods. 
          * @param ...
          */
         public function log()
