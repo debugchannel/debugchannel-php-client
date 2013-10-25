@@ -21,13 +21,12 @@ namespace debugchannel {
          */
 
         /**
-         * address of debug channel server
+         * Hostname of debug channel server
          *
-         * potential values would be localhost, 192.168.2.17, 127.0.0.1.
-         * either domain names or ip addresses can be used.
+         * eg. eg,  192.168.2.17, 127.0.0.1, localhost
+         * Domain names or ip addresses can be used.
          *
          * @var string
-         *
          */
         private $host;
 
@@ -175,9 +174,9 @@ namespace debugchannel {
          * will get a getter method with the signature:
          * <pre><code>public function name() :: string</code></pre>
          *
-         * @param string $property  the string which represents the name of the property to reuturn.
-         * @return mixed  value of property
-         * @deprecated use the explicit getter methods.
+         * @param string $property  The string which represents the name of the property to return.
+         * @return mixed  Value of property.
+         * @deprecated Use the explicit getter methods.
          * @throws \InvalidArgumentException when no property exists with the name.
          */
         public function __get( $property )
@@ -208,9 +207,9 @@ namespace debugchannel {
         }
 
         /**
-         * Set phpref options that will be used by this instance of D
+         * Set phpref options that will be used by this instance of D.
          *
-         * @param array $options  the associtivate array of options, available options specified in constructors documentation.
+         * @param array $options  The associtivate array of options, available options specified in constructors documentation.
          * @return debugchannel\D
          */
         public function setOptions( array $options )
@@ -222,7 +221,7 @@ namespace debugchannel {
         /**
          * gets the options set
          *
-         * @return array   associtive array of options mapping option name to option value
+         * @return array   associative array of options mapping option name to option value
          */
         private function getPhpRefOptions()
         {
@@ -248,11 +247,14 @@ namespace debugchannel {
         }
 
         /**
-         * Handy shortcut fo ->log().
+         * Alias for ->explore().
          */
-        public function __invoke()
+        public function __invoke( $dataToLog, array $tags = array() )
         {
-            return call_user_func_array([$this, "log"], func_get_args());
+            return call_user_func(
+                array( $this, 'log'),
+                func_get_args()
+            );
         }
 
         /**
@@ -262,7 +264,7 @@ namespace debugchannel {
          * @deprecated use the explicit getter methods.
          * @param ...
          */
-        public function log()
+        public function log( $dataToLog, array $tags = array() )
         {
             foreach (func_get_args() as $arg) {
                 $this->explore($arg);
