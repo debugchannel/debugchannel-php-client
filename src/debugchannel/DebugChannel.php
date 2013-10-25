@@ -263,10 +263,7 @@ class DebugChannel
      */
     public function log( $dataToLog, array $tags = array() )
     {
-        return call_user_func(
-            array( $this, 'log'),
-            func_get_args()
-        );
+        return $this->explore($dataToLog, $tags);
     }
 
     /**
