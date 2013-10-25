@@ -60,49 +60,58 @@ namespace debugchannel {
         {
             $this->assertEquals($debugChannel, $debugChannel->string("Hello, World"));
         }
-        public function testClear()
+
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testClear($debugChannel)
         {
-            $this->mockedDebugChannel->clear();
+            $debugChannel->clear();
         }
 
-        public function testLog()
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testLog($debugChannel)
         {
-            $this->mockedDebugChannel->log("testLog");
+            $debugChannel->log("testLog");
         }
 
-        public function testInvoke()
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testInvoke($debugChannel)
         {
-            $this->mockedDebugChannel->__invoke("testInvoke");
+            $debugChannel->__invoke("testInvoke");
         }
 
-        public function testCode()
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testCode($debugChannel)
         {
-            $this->mockedDebugChannel->code('SELECT * FROM something;');
+            $debugChannel->code('SELECT * FROM something;');
         }
 
-        public function testTable()
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testTable($debugChannel)
         {
             $table = [
                     [0,1,2,3,4,5],
                     [0,1,2,3,4,5],
                     ['<',"<div>",2,3,4,5],
                 ];
-            $this->mockedDebugChannel->table($table);
+            $debugChannel->table($table);
         }
 
-        public function testImage()
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testImage($debugChannel)
         {
-            $this->mockedDebugChannel->image('testImage.png');
+            $debugChannel->image('testImage.png');
         }
 
-        public function testChat()
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testChat($debugChannel)
         {
-            $this->mockedDebugChannel->chat('Hi', 'Pete');
+            $debugChannel->chat('Hi', 'Pete');
         }
 
-        public function testChatAnon()
+        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
+        public function testChatAnon($debugChannel)
         {
-            $this->mockedDebugChannel->chat('Hi');
+            $debugChannel->chat('Hi');
         }
 
     }
@@ -114,12 +123,13 @@ namespace debugchannel {
 
         public function getData()
         {
-            return $this->mockedDebugChannelata;
+            return $this->data;
         }
 
         protected function makeRequest( $data )
         {
-            $this->mockedDebugChannelata = $data;
+            $data = $this->filloutRequest($data);            
+            $this->data = $data;
             return $this;
         }
     }
