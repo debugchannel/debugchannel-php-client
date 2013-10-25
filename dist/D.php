@@ -303,7 +303,8 @@ namespace debugchannel {
          */
         public function table(array $table)
         {
-            return $this->sendDebug('table', [$table]);
+            //TODO - check this is two dimensional
+            return $this->sendDebug('table', array($table));
         }
 
         /**
@@ -317,7 +318,7 @@ namespace debugchannel {
          */
         public function string($text)
         {
-            return $this->sendDebug('string', text);
+            return $this->sendDebug('string', $text);
         }
 
         /**
@@ -352,7 +353,7 @@ namespace debugchannel {
                 $text = $this->deIndent($text);
             }
             $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            return $this->sendDebug('syntaxHighlight', [$text, $lang, $trace]);
+            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace));
         }
 
         /**
@@ -408,7 +409,6 @@ namespace debugchannel {
 
         /**#@-*/
 
-
         private function makePhpRefCall( array $trace, array $args )
         {
 
@@ -430,14 +430,13 @@ namespace debugchannel {
             $this->setRefConfig($originalRefOptions);
         }
 
-        private function sendDebug ($handler, $args=[], $stacktrace=[])
+        private function sendDebug ($handler, $args=array(), $stacktrace=array())
         {
             $this->makeRequest(
                 array(
                     'handler' => $handler,
                     'args' => is_array($args) ? $args : [$args],
-                    'stacktrace' => $stacktrace,
-                    'timestamp' => $this->getTime()
+                    'stacktrace' => $stacktrace
                 )
             );
             return $this;

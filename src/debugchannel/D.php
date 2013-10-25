@@ -223,7 +223,6 @@ namespace debugchannel {
          * gets the options set
          *
          * @return array   associtive array of options mapping option name to option value
-         *
          */
         private function getPhpRefOptions()
         {
@@ -237,9 +236,9 @@ namespace debugchannel {
         }
 
         /**
-         * get the debug server url
+         * Get the debug server url
          *
-         * contains both the host and channel.
+         * Contains both the host and channel.
          *
          * @return string   the string is the url where the debugger can be accessed from
          */
@@ -255,7 +254,6 @@ namespace debugchannel {
         {
             return call_user_func_array([$this, "log"], func_get_args());
         }
-
 
         /**
          * Debug a arbritary number of objects
@@ -430,7 +428,7 @@ namespace debugchannel {
             $this->setRefConfig($originalRefOptions);
         }
 
-        private function sendDebug ($handler, $args=[], $stacktrace=[])
+        private function sendDebug ($handler, $args=array(), $stacktrace=array())
         {
             $this->makeRequest(
                 array(
