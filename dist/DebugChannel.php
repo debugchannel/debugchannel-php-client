@@ -279,7 +279,7 @@ namespace debugchannel {
          * @param mixed $val  the mixed value to publish
          * @return DebugChannel  the DebugChannel object bound to $this
          */
-        public function explore($val)
+        public function explore( $dataToLog, array $tags = array() )
         {
             $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
 
@@ -287,7 +287,7 @@ namespace debugchannel {
             $ref = new ref(new RHtmlSpanFormatter());
 
             ob_start();
-            $ref->query( $arg, null );
+            $ref->query( $dataToLog, null );
             $html = ob_get_clean();
 
             $this->makeRequest(
@@ -425,27 +425,28 @@ namespace debugchannel {
 
         /**#@-*/
 
-        private function sendDebug ($handler, $args=array(), $stacktrace=array())
+        private function sendDebug ($handler, $args = array(), $stacktrace = array())
         {
             $this->makeRequest(
                 array(
                     'handler' => $handler,
-                    'args' => is_array($args) ? $args : [$args],
+                    'args' => is_array($args) ? $args : array($args),
                     'stacktrace' => $stacktrace
                 )
             );
             return $this;
         }
 
-        private function makeRequest( $data )
+        private function filloutRequest( array $data )
         {
+
             $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
             $offset = 0;
             // this loop construct starts on the second element
             while( $working = next($trace) and isset($working['class']) and $working['class'] === __CLASS__ ) {
                 $offset++;
             }
-            // exclude all but the first call to debugchannel\D
+            // exclude all but the first call to __CLASS__, renumber array
             $data['trace'] = $this->formatTrace( array_slice($trace, $offset) );
             // tags are a required field
             $data['tags'] = isset($data['tags']) ? $data['tags'] : array();
@@ -457,6 +458,15 @@ namespace debugchannel {
 
             // process id
             $data['info'] = $this->getInfoArray();
+
+            return $data;
+
+        }
+
+        private function makeRequest( $data )
+        {
+
+            $data = $this->filloutRequest($data);
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
