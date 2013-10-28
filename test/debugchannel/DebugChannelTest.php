@@ -230,6 +230,95 @@ namespace debugchannel {
             $this->assertNotEquals("", $request["info"]["machineId"]);
         }
 
+
+
+
+        // CODE METHOD
+
+
+        public function provideValidValuesForCodeMethod()
+        {
+            return array(
+                array(""),
+                array(null),
+                array("SELECT * FROM MyTable"),
+            );
+        }
+
+        /** @dataProvider provideValidValuesForCodeMethod */
+        public function testCodeMethodDoesNotThrowExceptionWithValidValues($value)
+        {
+            $this->debugChannel->code($value);
+        }
+
+
+        /** @expectedException \Exception */
+        public function testCodeMethodThrowsExceptionWhenObjectProvidedAsCode()
+        {
+            $this->debugchannel->code(new \stdclass());
+        }
+
+
+        /** @expectedException \Exception */
+        public function testCodeMethodThrowsExceptionWhenArrayProvidedAsCode()
+        {
+            $this->debugChannel->code(array());
+        }
+
+        /** @expectedException \Exception */
+        public function testCodeMethodThrowsExceptionWhenLanguageIsSetToNull()
+        {
+            $this->debugChannel->code("SELECT FROM Address", null);
+        }
+
+        public function testCodeMethodGeneratesRequestWithRequiredFields()
+        {
+            $this->debugchannel->code("yield 4","python");
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields, 
+                $this->debugchannel->getData()
+            );
+        }
+
+        /** @depends testCodeMethodGeneratesRequestWithRequiredFields */
+        public function testCodeMethodGeneratesRequestWithDefaultLanguageSet()
+        {
+            $this->debugChannel->code("SELECT * FROM Address");
+            $args = $this->debugchannel->getData()["args"];
+            $this->assertEquals('sql', $args[1]);
+        }
+
+        /** @depends testCodeMethodGeneratesRequestWithRequiredFields */
+        public function testCodeMethodGeneratesRequestWithLanguageSpecified()
+        {
+            $this->debugChannel->code("int i = 4;", "java");
+            $args = $this->debugchannel->getData()["args"];
+            $this->assertEquals('java', $args[1]);            
+        }
+
+        /** @depends testCodeMethodGeneratesRequestWithRequiredFields */
+        public function testCodeMethodGeneratesRequestWhichContainsTheCodeString()
+        {
+            $this->debugChannel->code("int i = 4;", "java");
+            $args = $this->debugchannel->getData()["args"];
+            $this->assertEquals('int i = 4;', $args[0]);
+        }
+
+
+
+
+        // UTIL
+        private function assertArrayHasKeysDeep($keys, $array)
+        {
+            foreach ($keys as $key => $value) {
+                $this->assertArrayHasKey($key, $array);
+                if (is_array($value)) {
+                    $this->assertArrayHasKeysDeep($value, $array[$key]);
+                }
+            }
+        }
+
+
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
         public function testClear($debugChannel)
         {
