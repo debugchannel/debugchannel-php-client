@@ -28,6 +28,10 @@ namespace debugchannel {
                 self::CHANNEL
             );      
         }
+
+
+
+
         // CONSTRUCTOR
         public function testConstructorDoesNotThrowExceptionWithValidHostAndChannel()
         {
