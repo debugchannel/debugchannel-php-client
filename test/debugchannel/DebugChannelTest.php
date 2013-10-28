@@ -8,6 +8,16 @@ namespace debugchannel {
         const IP = "http://127.0.0.1";
         const CHANNEL = "testing";
 
+        private $requestFields = array(
+            "handler" => null,
+            "args" => null,
+            "info" => array(
+                "machineId" => null,
+                "pid" => null,
+                "sequenceNo" => null,
+                "generationTime" => null
+            )
+        );
         // CONSTRUCTOR
         public function testConstructorDoesNotThrowExceptionWithValidHostAndChannel()
         {
