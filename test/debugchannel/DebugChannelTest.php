@@ -18,6 +18,16 @@ namespace debugchannel {
                 "generationTime" => null
             )
         );
+
+        private $debugChannel;
+
+        public function setup()
+        {
+            $this->debugChannel = new MockedDebugChannel(
+                self::IP,
+                self::CHANNEL
+            );      
+        }
         // CONSTRUCTOR
         public function testConstructorDoesNotThrowExceptionWithValidHostAndChannel()
         {
