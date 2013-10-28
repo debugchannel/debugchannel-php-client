@@ -314,10 +314,83 @@ class DebugChannel
      * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
      * @return DebugChannel  the DebugChannel instance bound to $this
      */
-    public function table(array $table)
+    public function table($value)
     {
-        //TODO - check this is two dimensional
-        return $this->sendDebug('table', array($table));
+        // object
+        if (is_object($value)) {
+            $formatted = array();
+            foreach ($value as $k => $v) {
+                $formatted[$k] = $v;
+            }
+            return $this->table($formatted);
+        }
+
+
+        if (is_array($value)) {
+    
+            // handles associtivate array
+            if ($this->isAssociative($value)) {
+                return $this->sendDebug(
+                    'table',
+                    array(
+                        array_keys($value),
+                        array_map(
+                            function($v){return $this->tableFlatten($v);}, 
+                            array_values($value)
+                        )
+                    )
+                );
+            }
+
+            // handles indexed array
+            $headers = array();
+            foreach ($value as $row) {
+                if (is_object($row) or is_array($row)) {
+                    foreach ($row as $k => $v) {
+                        if (!in_array($k, $headers)) {
+                            $headers[] = $k;
+                        }
+                    }
+                } else {
+                    if (!in_array("value", $headers)) {
+                        $headers[] = "value";
+                    }
+                }
+            }
+
+            $headerToIndex = array_flip($headers);
+            $table = array($headers);
+            foreach ($value as $row) {
+                $tableRow = array_fill(0, count($headers), null);
+                if (is_object($row) or is_array($row)) {
+                    foreach($row as $k => $v) {
+                        $index = $headerToIndex[$k];
+                        $tableRow[$index] = $this->tableFlatten($v);
+                    }
+                } else {
+                    $index = $headerToIndex["value"];
+                    $tableRow[$index] = $this->tableFlatten($row);
+                }
+                $table[] = $tableRow;
+            }
+            return $this->sendDebug('table', $table);
+        }
+
+
+        return $this->table(array("value" => $this->tableFlatten($value)));
+    }
+
+    private function tableFlatten($value) {
+        if(is_object($value) or is_array($value)) {
+            return json_encode($value);
+        } else {
+            return $value;
+        }
+    }
+
+    private function isAssociative($arr)
+    {
+        return array_keys($arr) !== range(0, count($arr) - 1);
     }
 
     /**
