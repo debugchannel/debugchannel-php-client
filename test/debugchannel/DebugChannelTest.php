@@ -74,18 +74,116 @@ namespace debugchannel {
         }
 
 
-        // STRING METHOD
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testStringMethodDoesNotThrowException($debugChannel)
+
+        // EXPLORE METHOD
+
+        public function provideValidExploreValues()
         {
-            return $debugChannel->string("Hello, World");
+            return array_map(
+                function($i)
+                {
+                    return array($i);
+                },
+                array(
+                    null,
+                    "",
+                    "hello",
+                    234.1,
+                    -453,
+                    array(),
+                    array(1,2,3),
+                    array(34, "hello", null),
+                    new \stdclass(),
+                    array("name" => "testname", "age" => 105),
+                    array( array(1,2,3), array(4,5,6), array(7,8,9))
+                )
+            );
+        }
+
+        /** @dataProvider provideValidExploreValues */
+        public function testExploreMethodDoesNotThrowExceptionwithValidValues($value)
+        {
+            $this->debugChannel->explore($value);
         }
 
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testStringMethodReturnsDebugChannel($debugChannel)
+        public function testExploreMethodReturnsSameInstanceOfDebugChannel($debugChannel)
         {
-            $this->assertEquals($debugChannel, $debugChannel->string("Hello, World"));
+            $this->assertEquals($debugChannel, $debugChannel->explore("Hello, World!"));
+        }
+
+        public function testExploreMethodGeneratesRequestWithRequiredFields()
+        {
+            $this->debugChannel->explore(new \stdclass());
+            $this->assertArrayHasKeysDeep($this->requestFields, $this->debugChannel->getData());
+        }
+
+        public function testExploreMethodGeneratesRequestWithValidArgsArray()
+        {
+            $val = json_decode(json_encode(array("name" => "testname", "age" => 105)));
+            $this->debugChannel->explore($val);
+            $args = $this->debugChannel->getData()["args"];
+
+            $this->assertEquals(1, count($args));
+        }
+
+
+        // STRING METHOD
+
+        public function testStringMethodDoesNotThrowException()
+        {
+            return $this->debugChannel->string("Hello, World");
+        }
+
+        public function testStringMethodReturnsDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel, 
+                $this->debugChannel->string("Hello, World")
+            );
+        }
+
+        public function testStringMethodDoesNotThrowExceptionWhenPassedNullValue()
+        {
+            $this->debugChannel->string(null);
+        }
+
+        public function testStringMethodGeneratesRequestOfTypeArray()
+        {
+            $this->debugChannel->string("Hello, World!");
+            $request = $this->debugChannel->getData();
+            $this->assertTrue(is_array($request));
+            return $request;
+        }
+
+        public function testStringMethodGeneratesRequestWithAllRequiredKeys()
+        {
+            $this->debugChannel->string("Hello, World!");
+            $this->assertArrayHasKeysDeep($this->requestFields, $this->debugChannel->getData());
+        }
+
+        /** @depends testStringMethodGeneratesRequestOfTypeArray */
+        public function testStringMethodGeneratesRequestWithValidHandler($request)
+        {
+            $this->assertEquals("string", $request["handler"]);
+        }
+
+
+        /** @depends testStringMethodGeneratesRequestOfTypeArray */
+        public function testStringMethodGeneratesRequestWithValidArgs($request)
+        {
+            $args = $request["args"];
+            $this->assertEquals(1, count($args));
+            $this->assertEquals("Hello, World!", $args[0]);
+        }
+
+
+        /** @depends testStringMethodGeneratesRequestOfTypeArray */
+        public function testStringMethodGeneratesRequestWithValidMachineId($request)
+        {
+            $this->assertNotEquals(null, $request["info"]["machineId"]);
+            $this->assertNotEquals("", $request["info"]["machineId"]);
         }
 
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
