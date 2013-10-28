@@ -55,7 +55,7 @@ namespace debugchannel {
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
         public function testStringMethodDoesNotThrowException($debugChannel)
         {
-            $debugChannel->string("Hello, World");
+            return $debugChannel->string("Hello, World");
         }
 
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
