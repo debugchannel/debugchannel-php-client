@@ -129,6 +129,50 @@ namespace debugchannel {
         }
 
 
+
+
+        // TABLE METHOD
+
+
+        public function provideValidTableValues()
+        {
+            return $this->provideValidExploreValues();
+        }
+
+
+        /** @dataProvider provideValidTableValues */
+        public function testTableMethodDoesNotThrowExceptionWithValidValues($value)
+        {
+            $this->debugChannel->table($value);
+        }
+
+        public function testTableMethodReturnsSameInstanceOfDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->table(array())
+            );
+        }
+
+        public function testTableMethodGeneratesRequestWithRequiredFields()
+        {
+            $this->debugChannel->table(array(array(1), array(2), array(3)));
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields, 
+                $this->debugchannel->getData()
+            );
+        }
+
+        public function testTableMethodgeneratesRequestWithValidArgsArray()
+        {
+            $this->debugChannel->table(array(array(1), array(2), array(3)));
+            $args = $this->debugchannel->getData()["args"];
+            $this->assertEquals(1, count($args));
+        }
+
+
+
+
         // STRING METHOD
 
         public function testStringMethodDoesNotThrowException()
