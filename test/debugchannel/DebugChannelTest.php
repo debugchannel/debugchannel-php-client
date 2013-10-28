@@ -49,6 +49,9 @@ namespace debugchannel {
             $this->assertEquals(true, $options["showPrivateMembers"]);
         }
 
+
+        // STRING METHOD
+
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
         public function testStringDoesNotThrowException($debugChannel)
         {
