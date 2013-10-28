@@ -402,7 +402,7 @@ class DebugChannel
     {
         $senderName = $senderName ? $senderName : self::ANON_IDENTIFIER;
 
-        return $this->sendDebug('chat', [$senderName, $message]);
+        return $this->sendDebug('chat', array($senderName, $message));
     }
 
     /**
