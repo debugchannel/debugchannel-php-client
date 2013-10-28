@@ -53,13 +53,13 @@ namespace debugchannel {
         // STRING METHOD
 
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testStringDoesNotThrowException($debugChannel)
+        public function testStringMethodDoesNotThrowException($debugChannel)
         {
             $debugChannel->string("Hello, World");
         }
 
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testStringReturnsDebugChannel($debugChannel)
+        public function testStringMethodReturnsDebugChannel($debugChannel)
         {
             $this->assertEquals($debugChannel, $debugChannel->string("Hello, World"));
         }
