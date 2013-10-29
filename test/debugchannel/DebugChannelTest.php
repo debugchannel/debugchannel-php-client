@@ -341,6 +341,13 @@ namespace debugchannel {
         }
 
 
+        /** @dataProvider provideInvalidValuesForImageMethod */
+        public function testImageMethodThrowsExceptionWithInvalidValue($value)
+        {
+            $this->setExpectedException('InvalidArgumentException');
+            $this->debugChannel->image($value);
+        }
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
