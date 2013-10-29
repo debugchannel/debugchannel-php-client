@@ -379,7 +379,7 @@ namespace debugchannel {
         {
             $base64Content = $isFileName ? base64_encode(file_get_contents($value)) : $value;
             $this->debugChannel->image($value);
-            $args = $this->debugchannel->getData()["args"];
+            $args = $this->debugChannel->getData()["args"];
             $this->assertEquals(1, count($args));
             $this->assertEquals($base64Content, $args[0]);
         }
