@@ -393,6 +393,86 @@ namespace debugchannel {
         }
 
 
+
+
+        // CHAT METHOD
+        public function provideValidChatArgs()
+        {
+            $validMessages = array(
+                "",
+                "hello",
+                json_encode(array("name" => 'john', 'age' => 105)),
+                'aasafdaslfasjldf;kjas;lfkjasdl;fkjasl;fkjasd;lfkjsadgjhdflgkjadflgkjdagsdafsafsafasfasdfsdfasfsafdasfasdfasdfasdfasdfasdfasdf'
+            );
+
+            $validSenderNames = array(
+                null,
+                "",
+                "john",
+                "<john>",
+                "!@£$%^&*(){};:\\'",
+                'multiple words',
+                'very long names that will overflow in the window'
+            );
+
+            $args = array();
+            foreach ($validMessages as $message) {
+                foreach ($validSenderNames as $name) {
+                    $args[] = array($message, $name);
+                }
+            }
+            return $args;
+        }
+
+        public function testChatMethodReturnsSameInstanceOfDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->chat("Hello, World!")
+            );
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodDoesNotThrowExceptionWithValidValues($message, $senderName) {
+            $this->debugChannel->chat($message, $senderName);
+        }
+
+        /** @expectedException InvalidArgumentException */
+        public function testChatMethodThrowsExceptionWhenNullPassedAsMessage()
+        {
+            $this->debugChannel->chat(null);
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodGeneratesRequestWithRequiredFields($message, $sender)
+        {
+            $this->debugChannel->chat($message, $sender);
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields,
+                $this->debugChannel->getData()
+            );
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodGeneratesRequestWithCorrectHandler($message, $sender)
+        {
+            $this->debugChannel->chat($message, $sender);
+            $this->assertEquals(
+                "chat",
+                $this->debugChannel->getData()["handler"]
+            );
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodGeneratesRequestWithValidArgsArray($message, $sender)
+        {
+            $this->debugChannel->chat($message, $sender);
+            $args = $this->debugChannel->getData()["args"];
+            $this->assertEquals(2, count($args));
+            $this->assertEquals($message, $args[1]);
+            $this->assertEquals(is_null($sender) ? DebugChannel::ANON_IDENTIFIER : $sender, $args[0]);
+        }
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
