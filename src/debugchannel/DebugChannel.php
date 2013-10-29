@@ -3194,6 +3194,13 @@ namespace {
         {
             return self::$debugChannel;
         }
+
+        public static function delegateGlobalFunction($globalFunctionName, array $args) {
+            call_user_func_array(
+                [self::getDebugChannel(), substr($globalFunctionName, 2)],
+                $args
+            );
+        }
     }
 
     CachedDebugChannel::setDebugChannel(
@@ -3210,57 +3217,38 @@ namespace {
 
     function dcexplore()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dctable()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcstring()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dccode()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcimage()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcchat()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcclear()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
-    }    
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+
 }
