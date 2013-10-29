@@ -314,10 +314,85 @@ class DebugChannel
      * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
      * @return DebugChannel  the DebugChannel instance bound to $this
      */
-    public function table(array $table)
+    public function table($value)
     {
-        //TODO - check this is two dimensional
-        return $this->sendDebug('table', array($table));
+        // object
+        if (is_object($value)) {
+            $formatted = array();
+            foreach ($value as $k => $v) {
+                $formatted[$k] = $v;
+            }
+            return $this->table($formatted);
+        }
+
+
+        if (is_array($value)) {
+    
+            // handles associtivate array
+            if ($this->isAssociative($value)) {
+                return $this->sendDebug(
+                    'table',
+                    array(
+                        array(
+                            array_keys($value),
+                            array_map(
+                                function($v){return $this->tableFlatten($v);}, 
+                                array_values($value)
+                            )
+                        )
+                    )
+                );
+            }
+
+            // handles indexed array
+            $headers = array();
+            foreach ($value as $row) {
+                if (is_object($row) or is_array($row)) {
+                    foreach ($row as $k => $v) {
+                        if (!in_array($k, $headers)) {
+                            $headers[] = $k;
+                        }
+                    }
+                } else {
+                    if (!in_array("value", $headers)) {
+                        $headers[] = "value";
+                    }
+                }
+            }
+
+            $headerToIndex = array_flip($headers);
+            $table = array($headers);
+            foreach ($value as $row) {
+                $tableRow = array_fill(0, count($headers), null);
+                if (is_object($row) or is_array($row)) {
+                    foreach($row as $k => $v) {
+                        $index = $headerToIndex[$k];
+                        $tableRow[$index] = $this->tableFlatten($v);
+                    }
+                } else {
+                    $index = $headerToIndex["value"];
+                    $tableRow[$index] = $this->tableFlatten($row);
+                }
+                $table[] = $tableRow;
+            }
+            return $this->sendDebug('table', array($table));
+        }
+
+
+        return $this->table(array("value" => $this->tableFlatten($value)));
+    }
+
+    private function tableFlatten($value) {
+        if(is_object($value) or is_array($value)) {
+            return json_encode($value);
+        } else {
+            return $value;
+        }
+    }
+
+    private function isAssociative($arr)
+    {
+        return array_keys($arr) !== range(0, count($arr) - 1);
     }
 
     /**
@@ -359,10 +434,24 @@ class DebugChannel
      * Default sql.
      * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
      * @return DebugChannel  the DebugChannel instance bound to $this.
+     * @throws \InvalidArgumentException if $text is not a string|number|bool
      */
     public function code( $text, $lang = 'sql', $deIndent = true )
     {
-        if( $deIndent ) {
+        // validates $text
+        if (is_numeric($text) or is_bool($text)) {
+            print_r($text);
+            $text = (string)$text;
+        } else if (!is_string($text)) {
+            throw new \InvalidArgumentException('DebugChannel::code only accepts scalars for $text argument');
+        }
+
+        // validates $lang
+        if (!is_string($lang) or trim($lang) === "") {
+            throw new \InvalidArgumentException('DebugChannel::code $lang must be a language name, not ' . gettype($lang));
+        }
+
+        if( $deIndent and !in_array($text, array(null, ""))) {
             $text = $this->deIndent($text);
         }
         $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
@@ -382,8 +471,22 @@ class DebugChannel
      */
     public function image($identifier)
     {
-        assert(is_string($identifier));
-        $base64 = file_exists($identifier) ? base64_encode(file_get_contents($identifier)) : $identifier;
+        if (!is_string($identifier) or trim($identifier) === "") {
+            throw new \InvalidArgumentException(
+                'DebugChannel::image takes a string as a argument not a ' . gettype($identifier)
+            );
+        }
+        // is a file
+        $isFile = file_exists($identifier);
+        $isFile = $isFile or strpos($identifier, '.') != false;
+        $isFile = $isFile or strpos($identifier, '/') != false;
+
+        // $identifier looks like a path but does it exist
+        if ($isFile and !is_file($identifier)) {
+            throw new \InvalidArgumentException("path is valid but is not a file: " . $identifier);
+        }
+
+        $base64 = $isFile ? base64_encode(file_get_contents($identifier)) : $identifier;
         return $this->sendDebug('image', $base64);
     }
 
@@ -400,8 +503,20 @@ class DebugChannel
      */
     public function chat($message, $senderName=null)
     {
-        $senderName = $senderName ? $senderName : self::ANON_IDENTIFIER;
+        if (is_null($senderName)) {
+            $senderName = self::ANON_IDENTIFIER;
+        }
 
+        if (!is_string($message)) {
+            throw new \InvalidArgumentException(
+                'DebugChannel::chat requires $message to be a string, not ' . gettype($message)
+            );
+        }
+        if (!is_string($senderName)) {
+            throw new \InvalidArgumentException(
+                'DebugChannel::chat requires $senderName to be a string, not ' . gettype($senderName)
+            );
+        }
         return $this->sendDebug('chat', array($senderName, $message));
     }
 
