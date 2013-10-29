@@ -526,7 +526,7 @@ namespace debugChannel {
          *
          * can be called at any point, event if there are no debugs in the channel.
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
-         * if multiple people are viewing the channel in browser then every user will be effected.
+         * if multiple people are viewing the channel in browser then every user will be effected
          *
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
