@@ -535,6 +535,20 @@ namespace debugChannel {
             return $this->sendDebug('clear');
         }
 
+        /**
+         * displays a help message in the browser's channel
+         *
+         * displays documentation in the browser showing hwo to use DebugChannel php-client
+         * and examples of different use cases.
+         * stdout is not effected by calling this method
+         *
+         * @return debugchannel\DebugChannel the DebugChannel instance that $this is bound to
+         */
+        public function help()
+        {
+            return $this->sendDebug('help', array('client' => 'php'));
+        }
+
         /**#@-*/
 
         protected function sendDebug ($handler, $args = array(), $stacktrace = array())
