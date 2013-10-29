@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <phpdoc>
   <parser>
-    <target>data/output</target>
+    <target>doc/tmp/</target>
   </parser>
   <transformer>
-    <target>data/output</target>
+    <target>doc/</target>
   </transformer>
   <files>
     <directory>src/debugchannel</directory>
