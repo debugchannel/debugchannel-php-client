@@ -340,6 +340,14 @@ namespace debugchannel {
             );
         }
 
+        public function testImageMethodReturnsSameInstanceOfDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->image(__DIR__ . "/testImage.png")
+            );
+        }
+
 
         /** @dataProvider provideInvalidValuesForImageMethod */
         public function testImageMethodThrowsExceptionWithInvalidValue($value)
