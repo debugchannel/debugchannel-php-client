@@ -471,8 +471,22 @@ class DebugChannel
      */
     public function image($identifier)
     {
-        assert(is_string($identifier));
-        $base64 = file_exists($identifier) ? base64_encode(file_get_contents($identifier)) : $identifier;
+        if (!is_string($identifier) or trim($identifier) === "") {
+            throw new \InvalidArgumentException(
+                'DebugChannel::image takes a string as a argument not a ' . gettype($identifier)
+            );
+        }
+        // is a file
+        $isFile = file_exists($identifier);
+        $isFile = $isFile or strpos($identifier, '.') != false;
+        $isFile = $isFile or strpos($identifier, '/') != false;
+
+        // $identifier looks like a path but does it exist
+        if ($isFile and !is_file($identifier)) {
+            throw new \InvalidArgumentException("path is valid but is not a file: " . $identifier);
+        }
+
+        $base64 = $isFile ? base64_encode(file_get_contents($identifier)) : $identifier;
         return $this->sendDebug('image', $base64);
     }
 
