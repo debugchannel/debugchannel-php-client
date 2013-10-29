@@ -364,6 +364,16 @@ namespace debugchannel {
             );
         }
 
+        /** @dataProvider provideValidValuesForImageMethod */
+        public function testImageMethodGeneratesRequestWithValidHandler($value)
+        {
+            $this->debugChannel->image($value);
+            $this->assertEquals(
+                "image",
+                $this->debugChannel->getData()["handler"]
+            );
+        }
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
