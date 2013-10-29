@@ -8,6 +8,30 @@ namespace debugchannel {
         const IP = "http://127.0.0.1";
         const CHANNEL = "testing";
 
+        private $requestFields = array(
+            "handler" => null,
+            "args" => null,
+            "info" => array(
+                "machineId" => null,
+                "pid" => null,
+                "sequenceNo" => null,
+                "generationTime" => null
+            )
+        );
+
+        private $debugChannel;
+
+        public function setup()
+        {
+            $this->debugChannel = new MockedDebugChannel(
+                self::IP,
+                self::CHANNEL
+            );      
+        }
+
+
+
+
         // CONSTRUCTOR
         public function testConstructorDoesNotThrowExceptionWithValidHostAndChannel()
         {
@@ -49,70 +73,459 @@ namespace debugchannel {
             $this->assertEquals(true, $options["showPrivateMembers"]);
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testStringDoesNotThrowException($debugChannel)
+
+
+
+        // EXPLORE METHOD
+
+        public function provideValidExploreValues()
         {
-            $debugChannel->string("Hello, World");
+            return array_map(
+                function($i)
+                {
+                    return array($i);
+                },
+                array(
+                    null,
+                    "",
+                    "hello",
+                    234.1,
+                    -453,
+                    array(),
+                    array(1,2,3),
+                    array(34, "hello", null),
+                    new \stdclass(),
+                    array("name" => "testname", "age" => 105),
+                    array( array(1,2,3), array(4,5,6), array(7,8,9))
+                )
+            );
+        }
+
+        /** @dataProvider provideValidExploreValues */
+        public function testExploreMethodDoesNotThrowExceptionwithValidValues($value)
+        {
+            $this->debugChannel->explore($value);
         }
 
         /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testStringReturnsDebugChannel($debugChannel)
+        public function testExploreMethodReturnsSameInstanceOfDebugChannel($debugChannel)
         {
-            $this->assertEquals($debugChannel, $debugChannel->string("Hello, World"));
+            $this->assertEquals($debugChannel, $debugChannel->explore("Hello, World!"));
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testClear($debugChannel)
+        public function testExploreMethodGeneratesRequestWithRequiredFields()
         {
-            $debugChannel->clear();
+            $this->debugChannel->explore(new \stdclass());
+            $this->assertArrayHasKeysDeep($this->requestFields, $this->debugChannel->getData());
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testLog($debugChannel)
+        public function testExploreMethodGeneratesRequestWithValidArgsArray()
         {
-            $debugChannel->log("testLog");
+            $val = json_decode(json_encode(array("name" => "testname", "age" => 105)));
+            $this->debugChannel->explore($val);
+            $args = $this->debugChannel->getData()["args"];
+
+            $this->assertEquals(1, count($args));
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testInvoke($debugChannel)
+
+
+
+        // TABLE METHOD
+
+
+        public function provideValidTableValues()
         {
-            $debugChannel->__invoke("testInvoke");
+            return $this->provideValidExploreValues();
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testCode($debugChannel)
+
+        /** @dataProvider provideValidTableValues */
+        public function testTableMethodDoesNotThrowExceptionWithValidValues($value)
         {
-            $debugChannel->code('SELECT * FROM something;');
+            $this->debugChannel->table($value);
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testTable($debugChannel)
+        public function testTableMethodReturnsSameInstanceOfDebugChannel()
         {
-            $table = [
-                    [0,1,2,3,4,5],
-                    [0,1,2,3,4,5],
-                    ['<',"<div>",2,3,4,5],
-                ];
-            $debugChannel->table($table);
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->table(array())
+            );
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testImage($debugChannel)
+        public function testTableMethodGeneratesRequestWithRequiredFields()
         {
-            $debugChannel->image('testImage.png');
+            $this->debugChannel->table(array(array(1), array(2), array(3)));
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields, 
+                $this->debugChannel->getData()
+            );
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testChat($debugChannel)
+        public function testTableMethodGeneratesRequestWithValidArgsArray()
         {
-            $debugChannel->chat('Hi', 'Pete');
+            $this->debugChannel->table(array(array(1), array(2), array(3)));
+            $args = $this->debugChannel->getData()["args"];
+            $this->assertEquals(1, count($args));
         }
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testChatAnon($debugChannel)
+
+
+
+        // STRING METHOD
+
+        public function testStringMethodDoesNotThrowException()
         {
-            $debugChannel->chat('Hi');
+            return $this->debugChannel->string("Hello, World");
         }
+
+        public function testStringMethodReturnsDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel, 
+                $this->debugChannel->string("Hello, World")
+            );
+        }
+
+        public function testStringMethodDoesNotThrowExceptionWhenPassedNullValue()
+        {
+            $this->debugChannel->string(null);
+        }
+
+        public function testStringMethodGeneratesRequestOfTypeArray()
+        {
+            $this->debugChannel->string("Hello, World!");
+            $request = $this->debugChannel->getData();
+            $this->assertTrue(is_array($request));
+            return $request;
+        }
+
+        public function testStringMethodGeneratesRequestWithAllRequiredKeys()
+        {
+            $this->debugChannel->string("Hello, World!");
+            $this->assertArrayHasKeysDeep($this->requestFields, $this->debugChannel->getData());
+        }
+
+        /** @depends testStringMethodGeneratesRequestOfTypeArray */
+        public function testStringMethodGeneratesRequestWithValidHandler($request)
+        {
+            $this->assertEquals("string", $request["handler"]);
+        }
+
+
+        /** @depends testStringMethodGeneratesRequestOfTypeArray */
+        public function testStringMethodGeneratesRequestWithValidArgs($request)
+        {
+            $args = $request["args"];
+            $this->assertEquals(1, count($args));
+            $this->assertEquals("Hello, World!", $args[0]);
+        }
+
+
+        /** @depends testStringMethodGeneratesRequestOfTypeArray */
+        public function testStringMethodGeneratesRequestWithValidMachineId($request)
+        {
+            $this->assertNotEquals(null, $request["info"]["machineId"]);
+            $this->assertNotEquals("", $request["info"]["machineId"]);
+        }
+
+
+
+
+        // CODE METHOD
+
+
+        public function provideValidValuesForCodeMethod()
+        {
+            return array(
+                array(""),
+                array("SELECT * FROM MyTable"),
+            );
+        }
+
+        public function provideInvalidValuesForCodeMethod()
+        {
+            return array(
+                array(null),
+                array(new \stdclass()),
+                array(array()),
+                array(array(1,2,3))
+            );
+        }
+
+        /** @dataProvider provideValidValuesForCodeMethod */
+        public function testCodeMethodDoesNotThrowExceptionWithValidValues($value)
+        {
+            $this->debugChannel->code($value);
+        }
+
+
+        /** @dataProvider provideInvalidValuesForCodeMethod */
+        public function testCodeMethodThrowsExceptionWhenObjectProvidedAsCode($value)
+        {
+            $this->setExpectedException('InvalidArgumentException');
+            $this->debugChannel->code($value);
+        }
+
+        /** @expectedException \Exception */
+        public function testCodeMethodThrowsExceptionWhenLanguageIsSetToNull()
+        {
+            $this->debugChannel->code("SELECT FROM Address", null);
+        }
+
+        public function testCodeMethodGeneratesRequestWithRequiredFields()
+        {
+            $this->debugChannel->code("yield 4","python");
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields, 
+                $this->debugChannel->getData()
+            );
+        }
+
+        /** @depends testCodeMethodGeneratesRequestWithRequiredFields */
+        public function testCodeMethodGeneratesRequestWithDefaultLanguageSet()
+        {
+            $this->debugChannel->code("SELECT * FROM Address");
+            $args = $this->debugChannel->getData()["args"];
+            $this->assertEquals('sql', $args[1]);
+        }
+
+        /** @depends testCodeMethodGeneratesRequestWithRequiredFields */
+        public function testCodeMethodGeneratesRequestWithLanguageSpecified()
+        {
+            $this->debugChannel->code("int i = 4;", "java");
+            $args = $this->debugChannel->getData()["args"];
+            $this->assertEquals('java', $args[1]);            
+        }
+
+        /** @depends testCodeMethodGeneratesRequestWithRequiredFields */
+        public function testCodeMethodGeneratesRequestWhichContainsTheCodeString()
+        {
+            $this->debugChannel->code("int i = 4;", "java");
+            $args = $this->debugChannel->getData()["args"];
+            $this->assertEquals('int i = 4;', $args[0]);
+        }
+
+
+
+
+        // IMAGE METHOD
+
+        public function provideInvalidValuesForImageMethod()
+        {
+            return array(
+                array(null),
+                array(""),
+                array(".")
+            );
+        }
+
+        public function provideValidValuesForImageMethod()
+        {
+            // expects testMethod to require args ($identifier, $isFileName)
+            return array(
+                // absolute paths
+                array(__DIR__ . "/testImage.png", true),
+                array(
+                    base64_encode(file_get_contents(__DIR__ . "/testImage.png")),
+                    false
+                ),
+                // relative paths
+                array("test/debugchannel/testImage.png", true),
+                array(
+                    base64_encode(file_get_contents("test/debugchannel/testImage.png")),
+                    false
+                )
+            );
+        }
+
+        public function testImageMethodReturnsSameInstanceOfDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->image(__DIR__ . "/testImage.png")
+            );
+        }
+
+
+        /** @dataProvider provideInvalidValuesForImageMethod */
+        public function testImageMethodThrowsExceptionWithInvalidValue($value)
+        {
+            $this->setExpectedException('InvalidArgumentException');
+            $this->debugChannel->image($value);
+        }
+
+        /** @dataProvider provideValidValuesForImageMethod */
+        public function testImageMethodDoesNotThrowExceptionWithValidValues($value)
+        {
+            $this->debugChannel->image($value);
+        }
+
+        /** @dataProvider provideValidValuesForImageMethod */
+        public function testImageMethodGeneratesRequestWithRequiredFields($value)
+        {
+            $this->debugChannel->image($value);
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields,
+                $this->debugChannel->getData()
+            );
+        }
+
+        /** @dataProvider provideValidValuesForImageMethod */
+        public function testImageMethodGeneratesRequestWithValidHandler($value)
+        {
+            $this->debugChannel->image($value);
+            $this->assertEquals(
+                "image",
+                $this->debugChannel->getData()["handler"]
+            );
+        }
+
+        /** @dataProvider provideValidVAluesForImageMethod */
+        public function testImageMethodGeneratesRequestWithCorrectImageData($value, $isFileName)
+        {
+            $base64Content = $isFileName ? base64_encode(file_get_contents($value)) : $value;
+            $this->debugChannel->image($value);
+            $args = $this->debugChannel->getData()["args"];
+            $this->assertEquals(1, count($args));
+            $this->assertEquals($base64Content, $args[0]);
+        }
+
+
+
+
+        // CHAT METHOD
+        public function provideValidChatArgs()
+        {
+            $validMessages = array(
+                "",
+                "hello",
+                json_encode(array("name" => 'john', 'age' => 105)),
+                'aasafdaslfasjldf;kjas;lfkjasdl;fkjasl;fkjasd;lfkjsadgjhdflgkjadflgkjdagsdafsafsafasfasdfsdfasfsafdasfasdfasdfasdfasdfasdfasdf'
+            );
+
+            $validSenderNames = array(
+                null,
+                "",
+                "john",
+                "<john>",
+                "!@£$%^&*(){};:\\'",
+                'multiple words',
+                'very long names that will overflow in the window'
+            );
+
+            $args = array();
+            foreach ($validMessages as $message) {
+                foreach ($validSenderNames as $name) {
+                    $args[] = array($message, $name);
+                }
+            }
+            return $args;
+        }
+
+        public function testChatMethodReturnsSameInstanceOfDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->chat("Hello, World!")
+            );
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodDoesNotThrowExceptionWithValidValues($message, $senderName) {
+            $this->debugChannel->chat($message, $senderName);
+        }
+
+        /** @expectedException InvalidArgumentException */
+        public function testChatMethodThrowsExceptionWhenNullPassedAsMessage()
+        {
+            $this->debugChannel->chat(null);
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodGeneratesRequestWithRequiredFields($message, $sender)
+        {
+            $this->debugChannel->chat($message, $sender);
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields,
+                $this->debugChannel->getData()
+            );
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodGeneratesRequestWithCorrectHandler($message, $sender)
+        {
+            $this->debugChannel->chat($message, $sender);
+            $this->assertEquals(
+                "chat",
+                $this->debugChannel->getData()["handler"]
+            );
+        }
+
+        /** @dataProvider provideValidChatArgs */
+        public function testChatMethodGeneratesRequestWithValidArgsArray($message, $sender)
+        {
+            $this->debugChannel->chat($message, $sender);
+            $args = $this->debugChannel->getData()["args"];
+            $this->assertEquals(2, count($args));
+            $this->assertEquals($message, $args[1]);
+            $this->assertEquals(is_null($sender) ? DebugChannel::ANON_IDENTIFIER : $sender, $args[0]);
+        }
+
+
+
+
+        // CLEAR METHOD
+
+        public function testClearMethodDoesNotThrowException()
+        {
+            $this->debugChannel->clear();
+        }
+
+        public function testClearMethodReturnsSameInstanceofDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->clear()
+            );
+        }
+
+        public function testClearMethodGeneratesRequestWithRequiredFields()
+        {
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields,
+                $this->debugChannel->clear()->getData()
+            );
+        }
+
+        public function testClearMethodGeneratesRequestWithCorrectHandler()
+        {
+            $this->assertEquals(
+                'clear',
+                $this->debugChannel->clear()->getData()["handler"]
+            );
+        }
+
+        public function testClearMethodGeneratesRequestWithCorrectArgsArray()
+        {
+            $args = $this->debugChannel->clear()->getData()['args'];
+            $this->assertEquals(0, count($args));
+        }
+
+
+
+        // UTIL
+        private function assertArrayHasKeysDeep($keys, $array)
+        {
+            foreach ($keys as $key => $value) {
+                $this->assertArrayHasKey($key, $array);
+                if (is_array($value)) {
+                    $this->assertArrayHasKeysDeep($value, $array[$key]);
+                }
+            }
+        }
+
 
     }
 
