@@ -3250,5 +3250,10 @@ namespace {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
+    function dchelp()
+    {
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
 
 }
