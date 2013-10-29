@@ -308,6 +308,39 @@ namespace debugchannel {
         }
 
 
+
+
+        // IMAGE METHOD
+
+        public function provideInvalidValuesForImageMethod()
+        {
+            return array(
+                array(null),
+                array(""),
+                array(".")
+            );
+        }
+
+        public function provideValidValuesForImageMethod()
+        {
+            // expects testMethod to require args ($identifier, $isFileName)
+            return array(
+                // absolute paths
+                array(__DIR__ . "/testImage.png", true),
+                array(
+                    base64_encode(file_get_contents(__DIR__ . "/testImage.png")),
+                    false
+                ),
+                // relative paths
+                array("test/debugchannel/testImage.png", true),
+                array(
+                    base64_encode(file_get_contents("test/debugchannel/testImage.png")),
+                    false
+                )
+            );
+        }
+
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
