@@ -473,6 +473,48 @@ namespace debugchannel {
             $this->assertEquals(is_null($sender) ? DebugChannel::ANON_IDENTIFIER : $sender, $args[0]);
         }
 
+
+
+
+        // CLEAR METHOD
+
+        public function testClearMethodDoesNotThrowException()
+        {
+            $this->debugChannel->clear();
+        }
+
+        public function testClearMethodReturnsSameInstanceofDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->clear()
+            );
+        }
+
+        public function testClearMethodGeneratesRequestWithRequiredFields()
+        {
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields,
+                $this->debugChannel->clear()->getData()
+            );
+        }
+
+        public function testClearMethodGeneratesRequestWithCorrectHandler()
+        {
+            $this->assertEquals(
+                'clear',
+                $this->debugChannel->clear()->getData()["handler"]
+            );
+        }
+
+        public function testClearMethodGeneratesRequestWithCorrectArgsArray()
+        {
+            $args = $this->debugChannel->clear()->getData()['args'];
+            $this->assertEquals(0, count($args));
+        }
+
+
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
