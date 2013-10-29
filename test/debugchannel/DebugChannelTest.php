@@ -5,7 +5,7 @@ namespace debugchannel {
 
     class DebugChannelTest extends \PHPUnit_Framework_TestCase
     {
-        const IP = "http://127.0.0.1";
+        const IP = "127.0.0.1";
         const CHANNEL = "testing";
 
         private $requestFields = array(
