@@ -333,10 +333,12 @@ class DebugChannel
                 return $this->sendDebug(
                     'table',
                     array(
-                        array_keys($value),
-                        array_map(
-                            function($v){return $this->tableFlatten($v);}, 
-                            array_values($value)
+                        array(
+                            array_keys($value),
+                            array_map(
+                                function($v){return $this->tableFlatten($v);}, 
+                                array_values($value)
+                            )
                         )
                     )
                 );
@@ -373,7 +375,7 @@ class DebugChannel
                 }
                 $table[] = $tableRow;
             }
-            return $this->sendDebug('table', $table);
+            return $this->sendDebug('table', array($table));
         }
 
 
