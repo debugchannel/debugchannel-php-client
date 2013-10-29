@@ -348,6 +348,12 @@ namespace debugchannel {
             $this->debugChannel->image($value);
         }
 
+        /** @dataProvider provideValidValuesForImageMethod */
+        public function testImageMethodDoesNotThrowExceptionWithValidValues($value)
+        {
+            $this->debugChannel->image($value);
+        }
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
