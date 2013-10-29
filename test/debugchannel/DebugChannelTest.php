@@ -527,59 +527,6 @@ namespace debugchannel {
         }
 
 
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testClear($debugChannel)
-        {
-            $debugChannel->clear();
-        }
-
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testLog($debugChannel)
-        {
-            $debugChannel->log("testLog");
-        }
-
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testInvoke($debugChannel)
-        {
-            $debugChannel->__invoke("testInvoke");
-        }
-
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testCode($debugChannel)
-        {
-            $debugChannel->code('SELECT * FROM something;');
-        }
-
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testTable($debugChannel)
-        {
-            $table = [
-                    [0,1,2,3,4,5],
-                    [0,1,2,3,4,5],
-                    ['<',"<div>",2,3,4,5],
-                ];
-            $debugChannel->table($table);
-        }
-
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testImage($debugChannel)
-        {
-            $debugChannel->image('testImage.png');
-        }
-
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testChat($debugChannel)
-        {
-            $debugChannel->chat('Hi', 'Pete');
-        }
-
-        /** @depends testConstructorDoesNotThrowExceptionWithValidHostAndChannel */
-        public function testChatAnon($debugChannel)
-        {
-            $debugChannel->chat('Hi');
-        }
-
     }
 
 
