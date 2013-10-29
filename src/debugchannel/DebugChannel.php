@@ -432,10 +432,24 @@ class DebugChannel
      * Default sql.
      * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
      * @return DebugChannel  the DebugChannel instance bound to $this.
+     * @throws \InvalidArgumentException if $text is not a string|number|bool
      */
     public function code( $text, $lang = 'sql', $deIndent = true )
     {
-        if( $deIndent ) {
+        // validates $text
+        if (is_numeric($text) or is_bool($text)) {
+            print_r($text);
+            $text = (string)$text;
+        } else if (!is_string($text)) {
+            throw new \InvalidArgumentException('DebugChannel::code only accepts scalars for $text argument');
+        }
+
+        // validates $lang
+        if (!is_string($lang) or trim($lang) === "") {
+            throw new \InvalidArgumentException('DebugChannel::code $lang must be a language name, not ' . gettype($lang));
+        }
+
+        if( $deIndent and !in_array($text, array(null, ""))) {
             $text = $this->deIndent($text);
         }
         $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
