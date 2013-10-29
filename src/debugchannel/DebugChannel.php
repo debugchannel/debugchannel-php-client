@@ -1,81 +1,5 @@
 <?php
 
-namespace {
-
-    $dcGlobalInstance = null;
-
-    function dcsetup() 
-    {
-        global $dcGlobalInstance;
-        $reflector = new \ReflectionClass("debugChannel\DebugChannel");
-        $dcGlobalInstance = $reflector->newInstanceArgs(func_get_args());
-    }
-
-    function dcexplore()
-    {
-        global $dcGlobalInstance;
-        if(!$dcGlobalInstance) {
-            throw new \LogicException("dcsetup must be called before dcexplore");
-        }
-        call_user_func_array([$dcGlobalInstance, 'explore'], func_get_args());
-    }
-
-    function dctable()
-    {
-        global $dcGlobalInstance;
-        if(!$dcGlobalInstance) {
-            throw new \LogicException("dcsetup must be called before dctable");
-        }
-        call_user_func_array([$dcGlobalInstance, 'table'], func_get_args());
-    }
-
-    function dcstring()
-    {
-        global $dcGlobalInstance;
-        if(!$dcGlobalInstance) {
-            throw new \LogicException("dcsetup must be called before dcstring");
-        }
-        call_user_func_array([$dcGlobalInstance, 'string'], func_get_args());
-    }
-
-    function dccode()
-    {
-        global $dcGlobalInstance;
-        if(!$dcGlobalInstance) {
-            throw new \LogicException("dcsetup must be called before dccode");
-        }
-        call_user_func_array([$dcGlobalInstance, 'code'], func_get_args());
-    }
-
-    function dcimage()
-    {
-        global $dcGlobalInstance;
-        if(!$dcGlobalInstance) {
-            throw new \LogicException("dcsetup must be called before dcimage");
-        }
-        call_user_func_array([$dcGlobalInstance, 'image'], func_get_args());
-    }
-
-    function dcchat()
-    {
-        global $dcGlobalInstance;
-        if(!$dcGlobalInstance) {
-            throw new \LogicException("dcsetup must be called before dcchat");
-        }
-        call_user_func_array([$dcGlobalInstance, 'chat'], func_get_args());
-
-    }
-
-    function dcclear()
-    {
-        global $dcGlobalInstance;
-        if(!$dcGlobalInstance) {
-            throw new \LogicException("dcsetup must be called before dcclear");
-        }
-        call_user_func_array([$dcGlobalInstance, 'clear'], func_get_args());
-    }    
-
-}
 
 namespace debugChannel {
 
@@ -3172,4 +3096,157 @@ namespace debugChannel {
 
     }
 
+
+    class DebugChannelBuilder
+    {
+        const CONF_FILE_NAME = "dconfig.json";
+        const DEFAULT_ADDRESS = "debugchannel.com";
+        const DEFAULT_CHANNEL = "mychannel";
+
+        private $configFileLocations;
+
+        private $address;
+        private $channel;
+
+        private $debugChannelInstance;
+
+        public function __construct()
+        {
+            $this->configFileLocations = array(
+                __DIR__ . '/' . self::CONF_FILE_NAME,
+                __DIR__ . '/../../' . self::CONF_FILE_NAME,
+                $_SERVER['HOME'] . '/' . self::CONF_FILE_NAME
+            );
+        }
+
+        public function loadFromArguments($address, $channel)
+        {
+            $this->address = $address;
+            $this->channel = $channel;
+            return $this;
+        }
+
+        public function loadFromConfig()
+        {
+            $file = null;
+            foreach($this->configFileLocations as $location) {
+                if (file_exists($location)) {
+                    $file = $location;
+                    break;
+                }
+            }
+            if (is_null($file)) {
+                echo "couldn't find config file, loading from defaults\n";
+                $this->address = self::DEFAULT_ADDRESS;
+                $this->channel = self::DEFAULT_CHANNEL;
+            } else {
+                $obj = json_decode(file_get_contents($file));
+                assert(isset($obj["address"]));
+                assert(isset($obj["channel"]));
+                $this->address = $obj["address"];
+                $this->channel = $obj["channel"];
+            }
+            return $this;
+        }
+
+        public function build()
+        {
+            assert(isset($this->address));
+            assert(isset($this->channel));
+            return new DebugChannel($this->address, $this->channel);
+        }
+
+
+    }
+
+
+}
+
+
+
+namespace {
+
+
+    class CachedDebugChannel extends debugchannel\DebugChannel
+    {
+        private static $debugChannel;
+
+        public static function setDebugChannel(debugchannel\DebugChannel $debugChannel)
+        {
+            self::$debugChannel = $debugChannel;
+        }
+
+        public static function getDebugChannel()
+        {
+            return self::$debugChannel;
+        }
+    }
+
+    CachedDebugChannel::setDebugChannel(
+        (new \debugChannel\DebugChannelBuilder())->loadFromConfig()->build()
+    );
+
+
+    function dcsetup($address, $channel) 
+    {
+        $builder = new debugchannel\DebugChannelBuilder();
+        $debugChannel = $builder->loadFromArguments($address, $channel)->build();
+        CachedDebugChannel::setDebugChannel($debugChannel);
+    }
+
+    function dcexplore()
+    {
+        call_user_func_array(
+            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
+            func_get_args()
+        );
+    }
+
+    function dctable()
+    {
+        call_user_func_array(
+            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
+            func_get_args()
+        );
+    }
+
+    function dcstring()
+    {
+        call_user_func_array(
+            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
+            func_get_args()
+        );
+    }
+
+    function dccode()
+    {
+        call_user_func_array(
+            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
+            func_get_args()
+        );
+    }
+
+    function dcimage()
+    {
+        call_user_func_array(
+            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
+            func_get_args()
+        );
+    }
+
+    function dcchat()
+    {
+        call_user_func_array(
+            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
+            func_get_args()
+        );
+    }
+
+    function dcclear()
+    {
+        call_user_func_array(
+            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
+            func_get_args()
+        );
+    }    
 }
