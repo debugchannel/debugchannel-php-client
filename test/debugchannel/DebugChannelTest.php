@@ -159,14 +159,14 @@ namespace debugchannel {
             $this->debugChannel->table(array(array(1), array(2), array(3)));
             $this->assertArrayHasKeysDeep(
                 $this->requestFields, 
-                $this->debugchannel->getData()
+                $this->debugChannel->getData()
             );
         }
 
         public function testTableMethodgeneratesRequestWithValidArgsArray()
         {
             $this->debugChannel->table(array(array(1), array(2), array(3)));
-            $args = $this->debugchannel->getData()["args"];
+            $args = $this->debugChannel->getData()["args"];
             $this->assertEquals(1, count($args));
         }
 
@@ -255,7 +255,7 @@ namespace debugchannel {
         /** @expectedException \Exception */
         public function testCodeMethodThrowsExceptionWhenObjectProvidedAsCode()
         {
-            $this->debugchannel->code(new \stdclass());
+            $this->debugChannel->code(new \stdclass());
         }
 
 
@@ -273,10 +273,10 @@ namespace debugchannel {
 
         public function testCodeMethodGeneratesRequestWithRequiredFields()
         {
-            $this->debugchannel->code("yield 4","python");
+            $this->debugChannel->code("yield 4","python");
             $this->assertArrayHasKeysDeep(
                 $this->requestFields, 
-                $this->debugchannel->getData()
+                $this->debugChannel->getData()
             );
         }
 
@@ -284,7 +284,7 @@ namespace debugchannel {
         public function testCodeMethodGeneratesRequestWithDefaultLanguageSet()
         {
             $this->debugChannel->code("SELECT * FROM Address");
-            $args = $this->debugchannel->getData()["args"];
+            $args = $this->debugChannel->getData()["args"];
             $this->assertEquals('sql', $args[1]);
         }
 
@@ -292,7 +292,7 @@ namespace debugchannel {
         public function testCodeMethodGeneratesRequestWithLanguageSpecified()
         {
             $this->debugChannel->code("int i = 4;", "java");
-            $args = $this->debugchannel->getData()["args"];
+            $args = $this->debugChannel->getData()["args"];
             $this->assertEquals('java', $args[1]);            
         }
 
@@ -300,11 +300,9 @@ namespace debugchannel {
         public function testCodeMethodGeneratesRequestWhichContainsTheCodeString()
         {
             $this->debugChannel->code("int i = 4;", "java");
-            $args = $this->debugchannel->getData()["args"];
+            $args = $this->debugChannel->getData()["args"];
             $this->assertEquals('int i = 4;', $args[0]);
         }
-
-
 
 
         // UTIL
