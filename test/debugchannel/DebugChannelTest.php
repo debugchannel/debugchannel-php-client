@@ -374,6 +374,17 @@ namespace debugchannel {
             );
         }
 
+        /** @dataProvider provideValidVAluesForImageMethod */
+        public function testImageMethodGeneratesRequestWithCorrectImageData($value, $isFileName)
+        {
+            $base64Content = $isFileName ? base64_encode(file_get_contents($value)) : $value;
+            $this->debugChannel->image($value);
+            $args = $this->debugchannel->getData()["args"];
+            $this->assertEquals(1, count($args));
+            $this->assertEquals($base64Content, $args[0]);
+        }
+
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
