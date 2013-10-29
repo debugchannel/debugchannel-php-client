@@ -163,7 +163,7 @@ namespace debugchannel {
             );
         }
 
-        public function testTableMethodgeneratesRequestWithValidArgsArray()
+        public function testTableMethodGeneratesRequestWithValidArgsArray()
         {
             $this->debugChannel->table(array(array(1), array(2), array(3)));
             $args = $this->debugChannel->getData()["args"];
