@@ -546,7 +546,7 @@ namespace debugChannel {
          */
         public function help()
         {
-            return $this->sendDebug('help', array('client' => 'php'));
+            return $this->sendDebug('help', array('php'));
         }
 
         /**#@-*/
