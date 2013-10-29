@@ -240,8 +240,17 @@ namespace debugchannel {
         {
             return array(
                 array(""),
-                array(null),
                 array("SELECT * FROM MyTable"),
+            );
+        }
+
+        public function provideInvalidValuesForCodeMethod()
+        {
+            return array(
+                array(null),
+                array(new \stdclass()),
+                array(array()),
+                array(array(1,2,3))
             );
         }
 
@@ -252,17 +261,11 @@ namespace debugchannel {
         }
 
 
-        /** @expectedException \Exception */
-        public function testCodeMethodThrowsExceptionWhenObjectProvidedAsCode()
+        /** @dataProvider provideInvalidValuesForCodeMethod */
+        public function testCodeMethodThrowsExceptionWhenObjectProvidedAsCode($value)
         {
-            $this->debugChannel->code(new \stdclass());
-        }
-
-
-        /** @expectedException \Exception */
-        public function testCodeMethodThrowsExceptionWhenArrayProvidedAsCode()
-        {
-            $this->debugChannel->code(array());
+            $this->setExpectedException('InvalidArgumentException');
+            $this->debugChannel->code($value);
         }
 
         /** @expectedException \Exception */
