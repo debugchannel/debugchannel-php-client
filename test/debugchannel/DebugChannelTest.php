@@ -354,6 +354,16 @@ namespace debugchannel {
             $this->debugChannel->image($value);
         }
 
+        /** @dataProvider provideValidValuesForImageMethod */
+        public function testImageMethodGeneratesRequestWithRequiredFields($value)
+        {
+            $this->debugChannel->image($value);
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields,
+                $this->debugChannel->getData()
+            );
+        }
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
