@@ -503,13 +503,20 @@ class DebugChannel
      */
     public function chat($message, $senderName=null)
     {
-        if (is_null($message)) {
+        if (is_null($senderName)) {
+            $senderName = self::ANON_IDENTIFIER;
+        }
+
+        if (!is_string($message)) {
             throw new \InvalidArgumentException(
-                'DebugChannel::chat requires a strings value for $message not null'
+                'DebugChannel::chat requires $message to be a string, not ' . gettype($message)
             );
         }
-        $senderName = $senderName ? $senderName : self::ANON_IDENTIFIER;
-
+        if (!is_string($senderName)) {
+            throw new \InvalidArgumentException(
+                'DebugChannel::chat requires $senderName to be a string, not ' . gettype($senderName)
+            );
+        }
         return $this->sendDebug('chat', array($senderName, $message));
     }
 
