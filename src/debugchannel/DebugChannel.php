@@ -503,6 +503,11 @@ class DebugChannel
      */
     public function chat($message, $senderName=null)
     {
+        if (is_null($message)) {
+            throw new \InvalidArgumentException(
+                'DebugChannel::chat requires a strings value for $message not null'
+            );
+        }
         $senderName = $senderName ? $senderName : self::ANON_IDENTIFIER;
 
         return $this->sendDebug('chat', array($senderName, $message));
