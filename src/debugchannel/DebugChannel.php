@@ -526,13 +526,27 @@ namespace debugChannel {
          *
          * can be called at any point, event if there are no debugs in the channel.
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
-         * if multiple people are viewing the channel in browser then every user will be effected.
+         * if multiple people are viewing the channel in browser then every user will be effected
          *
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function clear()
         {
             return $this->sendDebug('clear');
+        }
+
+        /**
+         * displays a help message in the browser's channel
+         *
+         * displays documentation in the browser showing hwo to use DebugChannel php-client
+         * and examples of different use cases.
+         * stdout is not effected by calling this method
+         *
+         * @return debugchannel\DebugChannel the DebugChannel instance that $this is bound to
+         */
+        public function help()
+        {
+            return $this->sendDebug('help', array('client' => 'php'));
         }
 
         /**#@-*/
@@ -3180,6 +3194,13 @@ namespace {
         {
             return self::$debugChannel;
         }
+
+        public static function delegateGlobalFunction($globalFunctionName, array $args) {
+            call_user_func_array(
+                [self::getDebugChannel(), substr($globalFunctionName, 2)],
+                $args
+            );
+        }
     }
 
     CachedDebugChannel::setDebugChannel(
@@ -3196,57 +3217,43 @@ namespace {
 
     function dcexplore()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dctable()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcstring()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dccode()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcimage()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcchat()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dcclear()
     {
-        call_user_func_array(
-            [CachedDebugChannel::getDebugChannel(), substr(__FUNCTION__, 2)], 
-            func_get_args()
-        );
-    }    
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dchelp()
+    {
+        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+
 }

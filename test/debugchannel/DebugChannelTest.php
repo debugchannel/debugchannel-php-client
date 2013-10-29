@@ -515,6 +515,45 @@ namespace debugchannel {
 
 
 
+
+        // HELP METHOD
+        public function testHelpMethodDoesNotThrowException()
+        {
+            $this->debugChannel->help();
+        }
+
+        public function testHelpMethodReturnsSameInstanceOfDebugChannel()
+        {
+            $this->assertEquals(
+                $this->debugChannel,
+                $this->debugChannel->help()
+            );
+        }
+
+        public function testHelpMethodGeneratesRequestWithRequiredFields()
+        {
+            $this->assertArrayHasKeysDeep(
+                $this->requestFields,
+                $this->debugChannel->help()->getData()
+            );
+        }
+
+        public function testHelpMethodGeneratesRequestWithCorrectHandler()
+        {
+            $this->assertEquals(
+                'help',
+                $this->debugChannel->help()->getData()["handler"]
+            );
+        }
+
+        public function testHelpMethodGeneratesRequestWithCorrectArgsArray()
+        {
+            $args = $this->debugChannel->help()->getData()["args"];
+            $this->assertEquals(array('client' => 'php'), $args);
+        }
+
+
+
         // UTIL
         private function assertArrayHasKeysDeep($keys, $array)
         {
