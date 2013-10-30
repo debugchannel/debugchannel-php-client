@@ -549,7 +549,7 @@ namespace debugchannel {
         public function testHelpMethodGeneratesRequestWithCorrectArgsArray()
         {
             $args = $this->debugChannel->help()->getData()["args"];
-            $this->assertEquals(array('client' => 'php'), $args);
+            $this->assertEquals(array('php'), $args);
         }
 
 
