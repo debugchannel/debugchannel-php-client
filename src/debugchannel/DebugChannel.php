@@ -3110,143 +3110,192 @@ namespace debugChannel {
 
     }
 
-    class DebugChannelBuilder
+    class Config
     {
-
-        const CONF_FILE_NAME = "dconfig.json";
-        const DEFAULT_ADDRESS = "debugchannel.com";
-        const DEFAULT_CHANNEL = "mychannel";
-
-        private $configFileLocations;
-
-        private $address;
-        private $channel;
-
-        private $debugChannelInstance;
-
-        public function __construct()
+        public $host;
+        public $channel;
+        public $apiKey;
+        public $options;
+        public function __construct( $host, $channel, $apiKey = null, array $options = array() )
         {
-            $this->configFileLocations = array(
-                __DIR__ . '/' . self::CONF_FILE_NAME,
-                __DIR__ . '/../../' . self::CONF_FILE_NAME,
-                $_SERVER['HOME'] . '/' . self::CONF_FILE_NAME
-            );
-        }
-
-        public function loadFromArguments($address, $channel)
-        {
-            $this->address = $address;
+            $this->host = $host;
             $this->channel = $channel;
-            return $this;
+            $this->apiKey = $apiKey;
+            $this->options = $options;
         }
-
-        public function loadFromConfig()
+        public function isValid( &$error = null )
         {
-            $file = null;
-            foreach($this->configFileLocations as $location) {
-                if (file_exists($location)) {
-                    $file = $location;
-                    break;
-                }
+            $error = null;
+            if ( !isset($this->host) ) {
+                $error = "Missing host";
+            } elseif ( !isset($this->channel) ) {
+                $error = "Missing channel";
             }
-            if (is_null($file)) {
-                echo "couldn't find config file, loading from defaults\n";
-                $this->address = self::DEFAULT_ADDRESS;
-                $this->channel = self::DEFAULT_CHANNEL;
-            } else {
-                $obj = json_decode(file_get_contents($file), true);
-                assert(isset($obj["address"]));
-                assert(isset($obj["channel"]));
-                $this->address = $obj["address"];
-                $this->channel = $obj["channel"];
-            }
-            return $this;
+            return null === $error;
         }
+    }
 
-        public function build()
-        {
-            assert(isset($this->address));
-            assert(isset($this->channel));
-            return new DebugChannel($this->address, $this->channel);
+    function load_config_from_json($json)
+    {
+        $decoded = json_decode($json, true );
+        if( null === $decoded and JSON_ERROR_NONE !== $lastError = json_last_error() ) {
+            throw new \Exception("Not valid json.");
         }
+        return new Config(
+            isset($decoded['host']) ? $decoded['host'] : null,
+            isset($decoded['channel']) ? $decoded['channel'] : null,
+            isset($decoded['apiKey']) ? $decoded['apiKey'] : null,
+            isset($decoded['options']) ? $decoded['options'] : null
+        );
+    }
 
+    function build_debugchannel_from_config( Config $config, $throwError = true )
+    {
+        if( $config->isValid($error) ) {
+            return new DebugChannel(
+                $config->host,
+                $config->channel,
+                $config->apiKey,
+                $config->options
+            );
+        } elseif( $throwError ) {
+            throw new \Exception($error);
+        }
+        return false;
     }
 
 }
 
 namespace {
 
-    class CachedDebugChannel extends debugchannel\DebugChannel
+    class CachedDebugChannel
     {
-        private static $debugChannel;
+
+        const CONF_FILE_NAME = 'dconfig.json';
+
+        public static $instance;
+        private static $defaultConfig;
 
         public static function setDebugChannel(debugchannel\DebugChannel $debugChannel)
         {
-            self::$debugChannel = $debugChannel;
+            self::$instance = $debugChannel;
+        }
+
+        public static function setDefaultConfig( debugchannel\Config $config, $throwException = true )
+        {
+            if( !$config->isValid($error) ) {
+                if( $throwException ) {
+                    throw new \Exception($error);
+                }
+                return false;
+            }
+            self::$defaultConfig = $config;
+            return true;
         }
 
         public static function getDebugChannel()
         {
-            if( !self::$debugchannel ) {
-                $debugChannelBuilder = debugChannel\DebugChannelBuilder();
-                self::$debugchannel = $debugChannelBuilder->loadFromConfig()->build();
+            if( !self::$instance ) {
+
+                // @joseph - if you wanted to reduce coupling the code below could go in a separate function
+                $configFileLocations = array(
+                    __DIR__ . '/' . self::CONF_FILE_NAME,
+                    __DIR__ . '/../../' . self::CONF_FILE_NAME,
+                    $_SERVER['HOME'] . '/' . self::CONF_FILE_NAME
+                );
+
+                // have a default config set
+                $config = self::$defaultConfig;
+
+                // check config files
+                while( list(,$file) = each( $configFileLocations) and !$config ) {
+                    if( file_exists($file) ) {
+                        try {
+                            $config = debugchannel\load_config_from_json( file_get_contents($file) );
+                            $config->isValid($error, true);
+                        } catch ( \Exception $e ) {
+                            $config = null;
+                            throw new \Exception("Error in DebugChannel config file `{$file}` - {$e->getMessage()}");
+                        }
+                    }
+                }
+
+                // load plain defaults
+                if( !$config ) {
+                    $config = new debugchannel\Config(
+                        'localhost',
+                        'default'
+                    );
+                }
+
+                self::$instance = debugchannel\build_debugchannel_from_config($config);
             }
-            return self::$debugChannel;
+            return self::$instance;
         }
 
         public static function delegateGlobalFunction($globalFunctionName, array $args) {
             call_user_func_array(
-                array(self::getDebugChannel(), substr($globalFunctionName, 2)),
+                array(self::getDebugChannel(), substr($globalFunctionName, 3)),
                 $args
             );
         }
+
     }
 
-    function dc_setup($address, $channel)
+    function dc_setup()
     {
-        $builder = new debugchannel\DebugChannelBuilder();
-        $debugChannel = $builder->loadFromArguments($address, $channel)->build();
-        CachedDebugChannel::setDebugChannel($debugChannel);
+        $args = func_get_args();
+        if( !$args ) {
+            throw new \Exception('Either pass a debugchannel\Config object or a $host, $channel');
+        }
+        if( is_object($args[0]) and $args[0] instanceof debugchannel\Config ) {
+            $config = $args[0];
+        } else {
+            $reflConfig = new ReflectionClass('debugchannel\Config');
+            $config = $reflConfig->newInstanceArgs($args);
+        }
+        CachedDebugChannel::$instance = null;
+        CachedDebugChannel::setDefaultConfig($config);
     }
 
     function dc_explore()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dc_table()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dc_string()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dc_code()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dc_image()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dc_chat()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dc_clear()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
     function dc_help()
     {
-        CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
 }
