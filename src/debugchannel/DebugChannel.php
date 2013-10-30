@@ -328,7 +328,7 @@ namespace debugChannel {
 
 
             if (is_array($value)) {
-        
+
                 // handles associtivate array
                 if ($this->isAssociative($value)) {
                     return $this->sendDebug(
@@ -337,7 +337,7 @@ namespace debugChannel {
                             array(
                                 array_keys($value),
                                 array_map(
-                                    function($v){return $this->tableFlatten($v);}, 
+                                    function($v){return $this->tableFlatten($v);},
                                     array_values($value)
                                 )
                             )
@@ -3110,9 +3110,9 @@ namespace debugChannel {
 
     }
 
-
     class DebugChannelBuilder
     {
+
         const CONF_FILE_NAME = "dconfig.json";
         const DEFAULT_ADDRESS = "debugchannel.com";
         const DEFAULT_CHANNEL = "mychannel";
@@ -3154,7 +3154,7 @@ namespace debugChannel {
                 $this->address = self::DEFAULT_ADDRESS;
                 $this->channel = self::DEFAULT_CHANNEL;
             } else {
-                $obj = json_decode(file_get_contents($file));
+                $obj = json_decode(file_get_contents($file), true);
                 assert(isset($obj["address"]));
                 assert(isset($obj["channel"]));
                 $this->address = $obj["address"];
@@ -3170,16 +3170,11 @@ namespace debugChannel {
             return new DebugChannel($this->address, $this->channel);
         }
 
-
     }
-
 
 }
 
-
-
 namespace {
-
 
     class CachedDebugChannel extends debugchannel\DebugChannel
     {
@@ -3192,68 +3187,66 @@ namespace {
 
         public static function getDebugChannel()
         {
+            if( !self::$debugchannel ) {
+                $debugChannelBuilder = debugChannel\DebugChannelBuilder();
+                self::$debugchannel = $debugChannelBuilder->loadFromConfig()->build();
+            }
             return self::$debugChannel;
         }
 
         public static function delegateGlobalFunction($globalFunctionName, array $args) {
             call_user_func_array(
-                [self::getDebugChannel(), substr($globalFunctionName, 2)],
+                array(self::getDebugChannel(), substr($globalFunctionName, 2)),
                 $args
             );
         }
     }
 
-    CachedDebugChannel::setDebugChannel(
-        (new \debugChannel\DebugChannelBuilder())->loadFromConfig()->build()
-    );
-
-
-    function dcsetup($address, $channel) 
+    function dc_setup($address, $channel)
     {
         $builder = new debugchannel\DebugChannelBuilder();
         $debugChannel = $builder->loadFromArguments($address, $channel)->build();
         CachedDebugChannel::setDebugChannel($debugChannel);
     }
 
-    function dcexplore()
+    function dc_explore()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
-    function dctable()
+    function dc_table()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
-    function dcstring()
+    function dc_string()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
-    function dccode()
+    function dc_code()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
-    function dcimage()
+    function dc_image()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
-    function dcchat()
+    function dc_chat()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
-    function dcclear()
+    function dc_clear()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
-    function dchelp()
+    function dc_help()
     {
         CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
-
 
 }
