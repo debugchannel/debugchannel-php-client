@@ -407,7 +407,7 @@ namespace debugChannel {
          */
         public function string($text)
         {
-            return $this->sendDebug('string', $text);
+            return $this->sendDebug('string', (string) $text);
         }
 
         /**
