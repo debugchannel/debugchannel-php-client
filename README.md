@@ -50,13 +50,44 @@ $d = new debugchannel\DebugChannel("192.168.2.158", "greeting");
 ```
 Initialises DebugChannel to `192.1682.158/greeting` where `greeting` is the channel being published on.
 
+Usage
+=====
 
-Example 1 - Strings
+The DebugChannel class has  methods to choose from when deciding how to display your data.
+The methods are:
+- explore: displaying object graphs
+- table: displaying objects as tables
+- string: displaying plain text
+- image displays images stored in files or base64 encoded images
+- code: displaying strings as syntax highlighted code
+- chat: displays messages like an Instant Messager application with a sender name
+Each method is designed to show a particular type of data in the most appropriate manner possible.
+
+Example - explore
+-----------------
+```
+class Person {
+  private $name; private $age;
+  public __construct($name, $age) { 
+    $this->name = $name; 
+    $this->age = $age; 
+  }
+}
+
+$d->explore("Hello World"); // 1
+$d->explore(23); // 2
+$d->explore(new Person("John", 32)); // 3
+$d->explore(array(1,"hello", new Person("John", 32))); // 4
+```
+
+
+Example - strings
 -------------------
 ```
 $d->string("Hello, World!");
 ```
-This will send the message `Hello, World`
+This will send the message `Hello, World`. Only strings can be given to this method, 
+to show objects or arrays use the explore and table methods.
 
 
 Example 2 - Objects
