@@ -525,7 +525,7 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
 
     public function testClearMethodGeneratesRequestWithCorrectHandler()
     {
-        $data = $this->debugChannel->getData();
+        $data = $this->debugChannel->clear()->getData();
         $this->assertEquals(
             'clear',
             $data["handler"]
@@ -534,7 +534,7 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
 
     public function testClearMethodGeneratesRequestWithCorrectArgsArray()
     {
-        $data = $this->debugChannel->getData();
+        $data = $this->debugChannel->clear()->getData();
         $args = $data["args"];
         $this->assertEquals(0, count($args));
     }
@@ -567,7 +567,7 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
 
     public function testHelpMethodGeneratesRequestWithCorrectHandler()
     {
-        $data = $this->debugChannel->getData();
+        $data = $this->debugChannel->help()->getData();
         $this->assertEquals(
             'help',
             $data["handler"]
@@ -576,7 +576,7 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
 
     public function testHelpMethodGeneratesRequestWithCorrectArgsArray()
     {
-        $data = $this->debugChannel->getData();
+        $data = $this->debugChannel->help()->getData();
         $args = $data["args"];
         $this->assertEquals(array('php'), $args);
     }
