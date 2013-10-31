@@ -141,7 +141,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     {
         $val = json_decode(json_encode(array("name" => "testname", "age" => 105)));
         $this->debugChannel->explore($val);
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
 
         $this->assertEquals(1, count($args));
     }
