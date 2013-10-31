@@ -131,21 +131,6 @@ namespace debugChannel {
          * <td align="left"><code>array()</code></td>
          * <td align="left">Custom/external formatters (as associative array: format =&gt; className)</td>
          * </tr>
-         * <tr>
-         * <td align="left"><code>'shortcutFunc'</code></td>
-         * <td align="left"><code>array('r', 'rt')</code></td>
-         * <td align="left">Shortcut functions used to detect the input expression. If they are namespaced, the namespace must be present as well (methods are not  supported)</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'stylePath'</code></td>
-         * <td align="left"><code>'{:dir}/ref.css'</code></td>
-         * <td align="left">Local path to a custom stylesheet (HTML only); <code>FALSE</code> means that no CSS is included.</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'scriptPath'</code></td>
-         * <td align="left"><code>'{:dir}/ref.js'</code></td>
-         * <td align="left">Local path to a custom javascript (HTML only); <code>FALSE</code> means no javascript (tooltips / toggle / kbd shortcuts require JS)</td>
-         * </tr>
          * </tbody>
          * </table>
          *
@@ -3171,7 +3156,7 @@ namespace {
     class CachedDebugChannel
     {
 
-        const CONF_FILE_NAME = 'dconfig.json';
+        const CONF_FILE_NAME = 'dc_setup.json';
 
         public static $instance;
         private static $defaultConfig;
@@ -3200,7 +3185,7 @@ namespace {
                 // @joseph - if you wanted to reduce coupling the code below could go in a separate function
                 $configFileLocations = array(
                     __DIR__ . '/' . self::CONF_FILE_NAME,
-                    __DIR__ . '/../../' . self::CONF_FILE_NAME,
+                    './' . self::CONF_FILE_NAME,
                     $_SERVER['HOME'] . '/' . self::CONF_FILE_NAME
                 );
 
