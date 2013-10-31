@@ -565,7 +565,7 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testHelpMethodGeneratesRequestWithCorrectArgsArray()
     {
         $args = $this->debugChannel->help()->getData()["args"];
-        $this->assertEquals(array('client' => 'php'), $args);
+        $this->assertEquals(array('php'), $args);
     }
 
 
