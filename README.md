@@ -34,7 +34,17 @@ require "path/to/debugchannel-php-client/dist/DebugChannel.php";
 How to use php-client
 =====================
 
-The php-client is declared in the namespace `debugchannel` and the client class is called `DebugChannel`.
+The php-client is declared in the namespace `debugchannel` and the client class is called `DebugChannel`. There is a also a small set of global functions.
+
+The different methods on the class DebugChannel determine the way information is displayed on debugchannel.
+
+- ->explore() displays a pretty representation of object graphs
+- ->table() displays something as tabular data whenever possible
+- ->string() displays plain text
+- ->image() displays images stored in files or base64 encoded images
+- ->code() displays syntax highlighted text
+- ->chat() displays messages like an Instant Messager application with a sender name
+- ->help() display a help message
 
 Initialisation
 --------------
@@ -60,19 +70,6 @@ $d = new debugchannel\DebugChannel(
 ```
 
 The third parameter is related to a authentication feature $apiKey which isn't currently used.
-
-Usage
-=====
-
-The DebugChannel class has methods to choose how your data is displayed on debugchannel.
-The methods are:
-- explore: displays a pretty representation of object graphs
-- table: displays objects as tables
-- string: displays plain text
-- image displays images stored in files or base64 encoded images
-- code: displays syntax highlighted text
-- chat: displays messages like an Instant Messager application with a sender name
-- help: display a help message
 
 ->explore()
 -----------------
@@ -211,7 +208,7 @@ The setup file must be valid json and it's structure is as follows.
 }
 ```
 
-Want more Docs
+Want more?
 =============
 
-PHP Documentor docs detailing all the class methods and a lot more techie detail are available in the repository. To view it open debugchannel-php-client/doc/index.html in your favourite browser.
+Awesome. PHP Documentor docs detailing all the class methods and a lot more techie detail are available in the repository. To view it open debugchannel-php-client/doc/index.html in your favourite browser.
