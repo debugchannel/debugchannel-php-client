@@ -169,14 +169,14 @@ dc_table(...);
 dc_code(...)
 ```
 
-Behind the scenes the `dc_` functions create a new DebugChannel object on first invocation and then reuse it. The constructor arguments for this global object can be set by either configuration file or by calling a function `dc_setup()`.
+Behind the scenes the `dc_*` functions create a new DebugChannel object on first invocation and then reuse it. The constructor arguments for this global object can be set by either configuration file or by calling a function `dc_setup()`.
 
 DebugChannel.php is compliant with PSR-0 autoloaders. The global functions can't / don't use a autoloader so you'll need to manually include the file 'debugchannel/DebugChannel.php' in a bootstrap-esque file somewhere.
 
 dc_setup()
 -----------------
 
-Call dc_setup() the same way you might call the constructor for the class DebugChannel. Subsequent calls to any `dc_` function will use a DebugChannel instance configured this way.
+Call dc_setup() the same way you might call the constructor for the class DebugChannel. Subsequent calls to any `dc_*` functions will use a DebugChannel instance configured this way.
 
 eg,
 ```
@@ -194,6 +194,22 @@ If you don't call `dc_setup()` we search for a config file `dc_setup.json` in th
 - The server home directory determined by `$_SERVER['HOME']`.
 
 A setup file not in your projects source control means that each developer can use different channels and set different options based on personal preference without having to modify the code which produces the debugging output.
+
+The setup file must be valid json and it's structure is as follows.
+
+```
+{
+    "host": "192.168.2.17",
+    "channel" : "peter",
+    "apiKey": null,
+    "options": {
+      "showPrivateMembers": true,
+      "expLvl": 2,
+      "maxDepth": 2,
+      "showMethods": false
+    }
+}
+```
 
 Want more Docs
 =============
