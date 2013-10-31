@@ -8,7 +8,7 @@
         }
     },
     "require": {
-        "php": ">=5.3"
+        "php": ">=5.3",
     	"phpdocumentor/phpdocumentor": "v2.1.0",
         "phpdocumentor/template-abstract": "1.2.1"
     },
