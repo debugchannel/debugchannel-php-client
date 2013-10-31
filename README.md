@@ -3,14 +3,7 @@ debugchannel-php-client
 
 php client for DebugChannel.
 
-Installation
-------------
-
-There 2 ways to install php-client.
-- Composer
-- Github
-
-Via Composer
+Install via Composer
 ------------
 
 php-client is available on composer via [Packagist](https://packagist.org/).
@@ -22,7 +15,7 @@ composer require squareproton/debugchannel-php-client
 Composer will then automagically add debugchannel\DebugChannel to your autoloader. It is that simple.
 
 
-Via Github
+Install via Github
 ----------
 
 php-client is hosted on GitHub and can be used just like any other local library.
@@ -81,10 +74,10 @@ The methods are:
 - chat: displays messages like an Instant Messager application with a sender name
 - help: display a help message
 
-Explore
+->explore()
 -----------------
 
-Great for anything and everything. Pass it whatever and it'll do it's best to display a pretty, type aware, human readable, explorable (where appropriate) and helpful representation of its first argument. A total print_r() and var_dump() replacement.
+Great for anything and everything. Pass it whatever and it'll do it's best to display a pretty, type aware, human readable, explorable (if needed) and helpful representation of its first argument. A totally awesome print_r() and var_dump() replacement.
 ```
 class Person {
   private $name; private $age;
@@ -100,7 +93,7 @@ $d->explore(new Person("John", 32)); // 3
 $d->explore(array(1,"hello", new Person("John", 32))); // 4
 ```
 
-Strings
+->string()
 -----------------
 
 Sometimes you just want a string representation of a object. Anything you pass to it will be cast to a string.
@@ -109,14 +102,14 @@ Sometimes you just want a string representation of a object. Anything you pass t
 $d->string("Hello, World!");
 ```
 
-Clear
+->clear()
 -----------------
 ```
 $d->clear()
 ````
 Clears any messages currently being displayed on your channel. Great for 'resetting' a channel at the beginning of a new debugging flow.
 
-Table
+->table()
 -----------------
 Have data that looks like it can be displayed as a 2 dimensional table?
 
@@ -142,7 +135,7 @@ $data = array( $obj );
 $d->table($data);
 ```
 
-Code
+->code()
 -----------------
 Debugging some sql? Generating some javascript? Want to syntax highlight something?
 
@@ -152,7 +145,7 @@ $d->code( "SELECT * FROM something", "sql" );
 
 We use the excellent highlight.js syntax highlighting libriary. The list of supported languages can be seen here http://highlightjs.org/download/.
 
-Help
+->help()
 -----------------
 
 Want some help?
@@ -165,18 +158,20 @@ Outputs a helpful message on your channel with links to usage instructions and d
 Static Methods and Default Configuration
 -----------------
 
-We all want debugging to be as fast a possible. If instantiating a DebugChannel object seems like too much of a chore there are helpful global shortcuts to make this pain go away. No need to add anything to a namespace or muck about with dependency injection. The functions are the the method name from DebugChannel prefixed with 'dc_'; so where you'd have typed `$d->explore($mything)` all you need to do `dc_explore($mything)`. The following all work as you'd expect.
+We all want debugging to be as fast a possible. If instantiating a DebugChannel object seems like too much of a chore there are helpful global shortcuts to make this pain go away. No need to add a `uses` statement or worry about namespaces, muck about with dependency injection, ... .
 
-``
+The global functions are simply the method name from DebugChannel prefixed with 'dc_'; so where you'd have typed `$d->explore($mything)` all you need to do now is `dc_explore($mything)`. The following all work as you'd expect.
+
+```
 dc_clear();
-dc_explore("something");
+dc_explore(...);
 dc_table(...);
 dc_code(...)
 ```
 
 Behind the scenes the `dc_` functions create a new DebugChannel object on first invocation and then reuse it. The constructor arguments for this global object can be set by either configuration file or by calling a function `dc_setup()`.
 
-DebugChannel.php is compliant with PSR-0 autoloaders. The global functions can't / don't use a autoloader so you'll need to manually include the file '/debugchannel/DebugChannel.php'.
+DebugChannel.php is compliant with PSR-0 autoloaders. The global functions can't / don't use a autoloader so you'll need to manually include the file 'debugchannel/DebugChannel.php' in a bootstrap-esque file somewhere.
 
 dc_setup()
 -----------------
@@ -200,8 +195,7 @@ If you don't call `dc_setup()` we search for a config file `dc_setup.json` in th
 
 A setup file not in your projects source control means that each developer can use different channels and set different options based on personal preference without having to modify the code which produces the debugging output.
 
-Documentation
+Want more Docs
 =============
 
-PHP Documentor docs detailing all the class methods are available in the repository. To view it open debugchannel-php-client/doc/index.html in your favourite browser.
-
+PHP Documentor docs detailing all the class methods and a lot more techie detail are available in the repository. To view it open debugchannel-php-client/doc/index.html in your favourite browser.
