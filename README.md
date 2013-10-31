@@ -4,7 +4,7 @@ debugchannel-php-client
 php client for DebugChannel.
 
 Installation
-============
+------------
 
 There 2 ways to install php-client.
 - Composer
@@ -26,16 +26,15 @@ Via Github
 ----------
 
 php-client is hosted on GitHub and can be used just like any other local library.
-To install php-client download the repository
-```
-git clone https://github.com/SquareProtonOrg/debugchannel-php-client
-```
+
+Download the repository by checking out the code `git clone https://github.com/SquareProtonOrg/debugchannel-php-client` or by downloading a zip `https://github.com/debugchannel/debugchannel-php-client/archive/master.zip`
+
 This will create a directory called `debugchannel-php-client`. You only need to include 1 file - located at `debugchannel-php-client/dist/DebugChannel.php` - and you are done.
 
 For example:
 ```
 <?php
-require("path/to/debugchannel-php-client/dist/DebugChannel.php");
+require "path/to/debugchannel-php-client/dist/DebugChannel.php";
 ...
 ```
 
@@ -65,9 +64,9 @@ $d = new debugchannel\DebugChannel(
         'showMethods' => false // switches of display of method signatures on objects
     )
 );
+```
 
-The third parameter is currently not used.
-
+The third parameter is related to a authentication feature $apiKey which isn't currently used.
 
 Usage
 =====
