@@ -13,7 +13,7 @@ class MockedDebugChannel extends DebugChannel
 
     protected function makeRequest( $data )
     {
-        $data = $this->filloutRequest($data);
+        $data = $this->filloutRequest($data, array());
         $this->data = $data;
         return $this;
     }
