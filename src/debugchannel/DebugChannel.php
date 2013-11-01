@@ -303,7 +303,7 @@ namespace debugChannel {
         public function table($value)
         {
 
-            function tableFlatten($value) {
+            $tableFlatten = function ($value) {
                 if(is_object($value) or is_array($value)) {
                     return json_encode($value);
                 } else {
@@ -311,11 +311,10 @@ namespace debugChannel {
                 }
             }
 
-            function isAssociative($arr)
+            $isAssociative = function ($arr)
             {
                 return array_keys($arr) !== range(0, count($arr) - 1);
             }
-
 
             // object
             if (is_object($value)) {
@@ -337,7 +336,7 @@ namespace debugChannel {
                             array(
                                 array_keys($value),
                                 array_map(
-                                    function ($v) {return tableFlatten($v);},
+                                    function ($v) use ($tableFlatten) {return $tableFlatten($v);},
                                     array_values($value)
                                 )
                             )
