@@ -11,10 +11,8 @@ foreach( range(1,1) as $n ) {
 }
 */
 
-$d = new DebugChannel('192.168.2.17', 'peter');
+$d = new DebugChannel('https://debugchannel.com', 'pete');
 
 $a = 'a';
-$b = 'b';
 
-
-$d->explore($a); echo "a\n"; !dc_explore($b); echo "b\n";
+$d->explore(rand());

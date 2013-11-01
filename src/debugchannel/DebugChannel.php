@@ -228,7 +228,7 @@ namespace debugChannel {
          */
         public function getRequestUrl()
         {
-            return "http://{$this->host}:1025/{$this->channel}";
+            return "{$this->host}/{$this->channel}";
         }
 
         /**
@@ -591,11 +591,12 @@ namespace debugChannel {
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
-            curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 2);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json') );
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data) );
-
+            // argh
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $response = curl_exec($ch);
             $curlInfo = curl_getinfo($ch);
 
