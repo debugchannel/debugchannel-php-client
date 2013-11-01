@@ -550,17 +550,21 @@ namespace debugChannel {
             return $this;
         }
 
-        protected function filloutRequest( array $data )
+        protected function filloutRequest( array $data, $inputExpressions )
         {
 
-            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            $offset = 0;
+            $trace = defined('DEBUG_BACKTRACE_IGNORE_ARGS') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
+            $offset = 1;
             // this loop construct starts on the second element
-            while( $working = next($trace) and isset($working['class']) and $working['class'] === __CLASS__ ) {
+            while( $working = next($trace) and ( $file = isset($working['file']) ? $working['file'] : $file ) and __FILE__ === $file ) {
                 $offset++;
             }
+            $trace = array_slice($trace, $offset);
+            if( $inputExpressions ) {
+                $trace[0]['what'] = $inputExpressions[0];
+            }
             // exclude all but the first call to __CLASS__, renumber array
-            $data['trace'] = $this->formatTrace( array_slice($trace, $offset) );
+            $data['trace'] = $this->formatTrace( $trace );
             // tags are a required field
             $data['tags'] = isset($data['tags']) ? $data['tags'] : array();
 
@@ -579,7 +583,11 @@ namespace debugChannel {
         protected function makeRequest( $data )
         {
 
-            $data = $this->filloutRequest($data);
+            // get input expressions
+            $options = array();
+            $inputExpressions = $this->getInputExpressions($options);
+
+            $data = $this->filloutRequest( $data, $inputExpressions );
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
@@ -607,6 +615,12 @@ namespace debugChannel {
                 throw new \Exception($response.$additionalInfo);
             } elseif ( $curlInfo['http_code'] !== 200 ) {
                 throw new \Exception($response);
+            }
+
+            // print_r( $options );
+            // exit early
+            if( in_array('!', $options) ) {
+                exit(0);
             }
 
             return $this;
@@ -653,10 +667,14 @@ namespace debugChannel {
                     $fn = isset( $component['class'] ) ? "{$component['class']}{$component['type']}" : '';
                     $fn .= "{$component['function']}()";
 
-                    return array(
+                    $output = array(
                         'location' => $location,
                         'fn' => $fn
                     );
+                    if(isset($component['what']) ) {
+                        $output['what'] = $component['what'];
+                    }
+                    return $output;
                 },
                 $trace
              );
@@ -706,15 +724,132 @@ namespace debugChannel {
             return self::$machineId;
         }
 
+        // based on https://github.com/digitalnature/php-ref/blob/master/ref.php
+        protected function getInputExpressions(array &$options = null){
+
+            // used to determine the position of the current call,
+            // if more queries calls were made on the same line
+            static $lineInst = array();
+
+            // pull only basic info with php 5.3.6+ to save some memory
+            $trace = defined('DEBUG_BACKTRACE_IGNORE_ARGS') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
+
+            while($callee = array_shift($trace)){
+
+                // extract only the information we neeed
+                $callee = array_intersect_key($callee, array_fill_keys(array('file', 'function', 'line', 'class', 'type'), false));
+                extract($callee);
+
+                // skip, if this code is called by any code in this file
+                // this could probably be hardened - there are only a couple of code paths to check for
+                //   1. via the static functions which can be detected by the presence of CacheDebugChannel::delegateGlobalFunction
+                //   2. by a public method on __CLASS__
+                // for now just check to see if we are being called from the right file
+                if( $file === __FILE__ )
+                    continue;
+
+                if(!$line || !$file)
+                    return array();
+
+                $code     = file($file);
+                $code     = $code[$line - 1]; // multiline expressions not supported!
+                $instIndx = 0;
+                $tokens   = token_get_all("<?php {$code}");
+
+                // locate the caller position in the line, and isolate argument tokens
+                foreach($tokens as $i => $token){
+
+                    // match token with our shortcut function name
+                    if(is_string($token) || ($token[0] !== T_STRING) || (strcasecmp($token[1], $function) !== 0))
+                        continue;
+
+                    // is this some method that happens to have the same name as the shortcut function?
+                    // Pete. We can't perform this test because this code might well be called from a object context
+                    // if(isset($tokens[$i - 1]) && is_array($tokens[$i - 1]) && in_array($tokens[$i - 1][0], array(T_DOUBLE_COLON, T_OBJECT_OPERATOR), true))
+                    //    continue;
+
+                    // find argument definition start, just after '('
+                    if(isset($tokens[$i + 1]) && ($tokens[$i + 1][0] === '(')){
+                        $instIndx++;
+
+                        if(!isset($lineInst[$line]))
+                            $lineInst[$line] = 0;
+
+                        if($instIndx <= $lineInst[$line])
+                            continue;
+
+                        $lineInst[$line]++;
+
+                        // gather options
+                        if($options !== null){
+                            $j = $i - 1;
+                            // is previous token a object operator?
+                            if( isset($tokens[$j]) && is_array($tokens[$j]) && in_array($tokens[$j][0], array(T_DOUBLE_COLON, T_OBJECT_OPERATOR), true) ) {
+                                // shift the object_operator and the object|object variable
+                                $j = $j-2;
+                            }
+                            while(isset($tokens[$j]) && is_string($tokens[$j]) && in_array($tokens[$j], array('@', '+', '-', '!', '~')))
+                                $options[] = $tokens[$j--];
+                        }
+
+                        $lvl = $index = $curlies = 0;
+                        $expressions = array();
+
+                        // get the expressions
+                        foreach(array_slice($tokens, $i + 2) as $token){
+
+                            if(is_array($token)){
+                              if($token[0] !== T_COMMENT)
+                                $expressions[$index][] = ($token[0] !== T_WHITESPACE) ? $token[1] : ' ';
+
+                              continue;
+                            }
+
+                            if($token === '{')
+                                $curlies++;
+
+                            if($token === '}')
+                                $curlies--;
+
+                            if($token === '(')
+                                $lvl++;
+
+                            if($token === ')')
+                                $lvl--;
+
+                            // assume next argument if a comma was encountered,
+                            // and we're not insde a curly bracket or inner parentheses
+                            if(($curlies < 1) && ($lvl === 0) && ($token === ',')){
+                                $index++;
+                                continue;
+                            }
+
+                            // negative parentheses count means we reached the end of argument definitions
+                            if($lvl < 0){
+                                foreach($expressions as &$expression)
+                                    $expression = trim(implode('', $expression));
+
+                                return $expressions;
+                            }
+
+                            $expressions[$index][] = $token;
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
     }
 
     // backwards compatible D
     // now with added deprecated message
     class D extends DebugChannel
     {
-        protected function filloutRequest( array $data )
+        protected function filloutRequest( array $data, $inputExpressions )
         {
-            $data = parent::filloutRequest($data);
+            $data = parent::filloutRequest($data, $inputExpressions);
             $data['deprecated'] = true;
             return $data;
         }
