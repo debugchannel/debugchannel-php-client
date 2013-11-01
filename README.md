@@ -3,8 +3,7 @@ debugchannel-php-client
 
 php client for DebugChannel.
 
-Install via Composer
-------------
+## Install via Composer ##
 
 php-client is available on composer via [Packagist](https://packagist.org/).
 It can be installed as a project dependency using the following command in the project root directory
@@ -15,8 +14,7 @@ composer require squareproton/debugchannel-php-client
 Composer will then automagically add debugchannel\DebugChannel to your autoloader. It is that simple.
 
 
-Install via Github
-----------
+## Install via Github ##
 
 php-client is hosted on GitHub and can be used just like any other local library.
 
@@ -46,8 +44,7 @@ The different methods on the class DebugChannel determine the way information is
 - ->chat() displays messages like an Instant Messager application with a sender name
 - ->help() display a help message
 
-Initialisation
---------------
+## Initialisation ##
 
 ```
 $d = new debugchannel\DebugChannel("192.168.2.158", "greeting");
@@ -71,10 +68,9 @@ $d = new debugchannel\DebugChannel(
 
 The third parameter is related to a authentication feature $apiKey which isn't currently used.
 
-->explore()
------------------
+## ->explore() ##
 
-Great for anything and everything. Pass it whatever and it'll do it's best to display a pretty, type aware, human readable, explorable (if needed) and helpful representation of its first argument. A totally awesome print_r() and var_dump() replacement.
+Great for anything and everything. Pass it whatever and it'll do it's best to display a pretty, type aware, human readable, explorable (if needed) and helpful representation of its first argument. A totally awesome [`print_r()`](http://php.net/manual/en/function.print-r.php) and [`var_dump`](http://php.net/manual/en/function.var-dump.php) replacement.
 ```
 class Person {
   private $name; private $age;
@@ -90,8 +86,7 @@ $d->explore(new Person("John", 32)); // 3
 $d->explore(array(1,"hello", new Person("John", 32))); // 4
 ```
 
-->string()
------------------
+## ->string() ##
 
 Sometimes you just want a string representation of a object. Anything you pass to it will be cast to a string.
 
@@ -99,15 +94,13 @@ Sometimes you just want a string representation of a object. Anything you pass t
 $d->string("Hello, World!");
 ```
 
-->clear()
------------------
+## ->clear() ##
 ```
 $d->clear()
 ````
 Clears any messages currently being displayed on your channel. Great for 'resetting' a channel at the beginning of a new debugging flow.
 
-->table()
------------------
+## ->table() ##
 Have data that looks like it can be displayed as a 2 dimensional table?
 
 like
@@ -132,8 +125,7 @@ $data = array( $obj );
 $d->table($data);
 ```
 
-->code()
------------------
+## ->code() ##
 Debugging some sql? Generating some javascript? Want to syntax highlight something?
 
 ```
@@ -142,8 +134,7 @@ $d->code( "SELECT * FROM something", "sql" );
 
 We use the excellent highlight.js syntax highlighting libriary. The list of supported languages can be seen here http://highlightjs.org/download/.
 
-->help()
------------------
+## ->help() ##
 
 Want some help?
 
@@ -152,8 +143,18 @@ $d->help();
 ```
 Outputs a helpful message on your channel with links to usage instructions and documentation. Also good for checking if everything is working.
 
-Static Methods and Default Configuration
------------------
+## Exiting ##
+
+If you want to exit immediately after sending a message prepend the `!` to any of the methods which cause a debug message to be sent. This will terminate script with a exit code 0;
+
+```
+$d = new DebugChannel("https://debugchannel.com", "something");
+!$d->explore("Something isn't quite right- exiting");
+```
+
+The complete list of functions this operates on is `!dc_explore()`, `!dc_table()`, `!dc_string()`, `!dc_code()`, `!dc_image()`, `!dc_chat()`, `!dc_clear()`, `!dc_help()`, `!$dc->explore()`, `!$dc->table()`, `!$dc->string()`, `!$dc->code()`, `!$dc->image()`, `!$dc->chat()`, `!$dc->clear()`, `!$dc->help()`,
+
+## Static Methods and Default Configuration ##
 
 We all want debugging to be as fast a possible. If instantiating a DebugChannel object seems like too much of a chore there are helpful global shortcuts to make this pain go away. No need to add a `uses` statement or worry about namespaces, muck about with dependency injection, ... .
 
@@ -170,8 +171,7 @@ Behind the scenes the `dc_*` functions create a new DebugChannel object on first
 
 DebugChannel.php is compliant with PSR-0 autoloaders. The global functions can't / don't use a autoloader so you'll need to manually include the file 'debugchannel/DebugChannel.php' in a bootstrap-esque file somewhere.
 
-dc_setup()
------------------
+## dc_setup() ##
 
 Call dc_setup() the same way you might call the constructor for the class DebugChannel. Subsequent calls to any `dc_*` functions will use a DebugChannel instance configured this way.
 
@@ -181,8 +181,7 @@ dc_setup( 'debugchannel.com', 'channel' );
 dc_explore( $mysqlResultSet );
 ```
 
-Via a configuration file
------------------
+## Via a configuration file ##
 
 If you don't call `dc_setup()` we search for a config file `dc_setup.json` in the following three directories.
 

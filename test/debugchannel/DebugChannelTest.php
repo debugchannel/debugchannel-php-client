@@ -13,7 +13,7 @@ class MockedDebugChannel extends DebugChannel
 
     protected function makeRequest( $data )
     {
-        $data = $this->filloutRequest($data);
+        $data = $this->filloutRequest($data, array());
         $this->data = $data;
         return $this;
     }
@@ -141,7 +141,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     {
         $val = json_decode(json_encode(array("name" => "testname", "age" => 105)));
         $this->debugChannel->explore($val);
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
 
         $this->assertEquals(1, count($args));
     }
@@ -182,7 +183,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testTableMethodGeneratesRequestWithValidArgsArray()
     {
         $this->debugChannel->table(array(array(1), array(2), array(3)));
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
         $this->assertEquals(1, count($args));
     }
 
@@ -302,7 +304,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testCodeMethodGeneratesRequestWithDefaultLanguageSet()
     {
         $this->debugChannel->code("SELECT * FROM Address");
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
         $this->assertEquals('sql', $args[1]);
     }
 
@@ -310,7 +313,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testCodeMethodGeneratesRequestWithLanguageSpecified()
     {
         $this->debugChannel->code("int i = 4;", "java");
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
         $this->assertEquals('java', $args[1]);
     }
 
@@ -318,7 +322,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testCodeMethodGeneratesRequestWhichContainsTheCodeString()
     {
         $this->debugChannel->code("int i = 4;", "java");
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
         $this->assertEquals('int i = 4;', $args[0]);
     }
 
@@ -390,9 +395,10 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testImageMethodGeneratesRequestWithValidHandler($value)
     {
         $this->debugChannel->image($value);
+        $data = $this->debugChannel->getData();
         $this->assertEquals(
             "image",
-            $this->debugChannel->getData()["handler"]
+            $data["handler"]
         );
     }
 
@@ -401,7 +407,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     {
         $base64Content = $isFileName ? base64_encode(file_get_contents($value)) : $value;
         $this->debugChannel->image($value);
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
         $this->assertEquals(1, count($args));
         $this->assertEquals($base64Content, $args[0]);
     }
@@ -472,9 +479,10 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testChatMethodGeneratesRequestWithCorrectHandler($message, $sender)
     {
         $this->debugChannel->chat($message, $sender);
+        $data = $this->debugChannel->getData();
         $this->assertEquals(
             "chat",
-            $this->debugChannel->getData()["handler"]
+            $data["handler"]
         );
     }
 
@@ -482,7 +490,8 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
     public function testChatMethodGeneratesRequestWithValidArgsArray($message, $sender)
     {
         $this->debugChannel->chat($message, $sender);
-        $args = $this->debugChannel->getData()["args"];
+        $data = $this->debugChannel->getData();
+        $args = $data["args"];
         $this->assertEquals(2, count($args));
         $this->assertEquals($message, $args[1]);
         $this->assertEquals(is_null($sender) ? DebugChannel::ANON_IDENTIFIER : $sender, $args[0]);
@@ -516,15 +525,17 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
 
     public function testClearMethodGeneratesRequestWithCorrectHandler()
     {
+        $data = $this->debugChannel->clear()->getData();
         $this->assertEquals(
             'clear',
-            $this->debugChannel->clear()->getData()["handler"]
+            $data["handler"]
         );
     }
 
     public function testClearMethodGeneratesRequestWithCorrectArgsArray()
     {
-        $args = $this->debugChannel->clear()->getData()['args'];
+        $data = $this->debugChannel->clear()->getData();
+        $args = $data["args"];
         $this->assertEquals(0, count($args));
     }
 
@@ -556,16 +567,18 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
 
     public function testHelpMethodGeneratesRequestWithCorrectHandler()
     {
+        $data = $this->debugChannel->help()->getData();
         $this->assertEquals(
             'help',
-            $this->debugChannel->help()->getData()["handler"]
+            $data["handler"]
         );
     }
 
     public function testHelpMethodGeneratesRequestWithCorrectArgsArray()
     {
-        $args = $this->debugChannel->help()->getData()["args"];
-        $this->assertEquals(array('client' => 'php'), $args);
+        $data = $this->debugChannel->help()->getData();
+        $args = $data["args"];
+        $this->assertEquals(array('php'), $args);
     }
 
 
