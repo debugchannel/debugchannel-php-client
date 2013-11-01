@@ -316,13 +316,14 @@ namespace debugChannel {
 
                 // handles associtivate array
                 if ($this->isAssociative($value)) {
+                    $that = $this;
                     return $this->sendDebug(
                         'table',
                         array(
                             array(
                                 array_keys($value),
                                 array_map(
-                                    function($v){return $this->tableFlatten($v);},
+                                    function($v)use($that){return $that->tableFlatten($v);},
                                     array_values($value)
                                 )
                             )
