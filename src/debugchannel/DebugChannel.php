@@ -302,6 +302,21 @@ namespace debugChannel {
          */
         public function table($value)
         {
+
+            function tableFlatten($value) {
+                if(is_object($value) or is_array($value)) {
+                    return json_encode($value);
+                } else {
+                    return $value;
+                }
+            }
+
+            function isAssociative($arr)
+            {
+                return array_keys($arr) !== range(0, count($arr) - 1);
+            }
+
+
             // object
             if (is_object($value)) {
                 $formatted = array();
@@ -316,14 +331,13 @@ namespace debugChannel {
 
                 // handles associtivate array
                 if ($this->isAssociative($value)) {
-                    $that = $this;
                     return $this->sendDebug(
                         'table',
                         array(
                             array(
                                 array_keys($value),
                                 array_map(
-                                    function($v)use($that){return $that->tableFlatten($v);},
+                                    function ($v) {return tableFlatten($v);},
                                     array_values($value)
                                 )
                             )
@@ -369,18 +383,6 @@ namespace debugChannel {
             return $this->table(array("value" => $this->tableFlatten($value)));
         }
 
-        private function tableFlatten($value) {
-            if(is_object($value) or is_array($value)) {
-                return json_encode($value);
-            } else {
-                return $value;
-            }
-        }
-
-        private function isAssociative($arr)
-        {
-            return array_keys($arr) !== range(0, count($arr) - 1);
-        }
 
         /**
          * publishes a raw string as is
