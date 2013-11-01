@@ -309,12 +309,12 @@ namespace debugChannel {
                 } else {
                     return $value;
                 }
-            }
+            };
 
             $isAssociative = function ($arr)
             {
                 return array_keys($arr) !== range(0, count($arr) - 1);
-            }
+            };
 
             // object
             if (is_object($value)) {
@@ -329,7 +329,7 @@ namespace debugChannel {
             if (is_array($value)) {
 
                 // handles associtivate array
-                if ($this->isAssociative($value)) {
+                if ($isAssociative($value)) {
                     return $this->sendDebug(
                         'table',
                         array(
@@ -367,11 +367,11 @@ namespace debugChannel {
                     if (is_object($row) or is_array($row)) {
                         foreach($row as $k => $v) {
                             $index = $headerToIndex[$k];
-                            $tableRow[$index] = $this->tableFlatten($v);
+                            $tableRow[$index] = $tableFlatten($v);
                         }
                     } else {
                         $index = $headerToIndex["value"];
-                        $tableRow[$index] = $this->tableFlatten($row);
+                        $tableRow[$index] = $tableFlatten($row);
                     }
                     $table[] = $tableRow;
                 }
@@ -379,7 +379,7 @@ namespace debugChannel {
             }
 
 
-            return $this->table(array("value" => $this->tableFlatten($value)));
+            return $this->table(array("value" => $tableFlatten($value)));
         }
 
 
