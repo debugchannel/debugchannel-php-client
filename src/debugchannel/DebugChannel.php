@@ -302,6 +302,20 @@ namespace debugChannel {
          */
         public function table($value)
         {
+
+            $tableFlatten = function ($value) {
+                if(is_object($value) or is_array($value)) {
+                    return json_encode($value);
+                } else {
+                    return $value;
+                }
+            };
+
+            $isAssociative = function ($arr)
+            {
+                return array_keys($arr) !== range(0, count($arr) - 1);
+            };
+
             // object
             if (is_object($value)) {
                 $formatted = array();
@@ -315,14 +329,14 @@ namespace debugChannel {
             if (is_array($value)) {
 
                 // handles associtivate array
-                if ($this->isAssociative($value)) {
+                if ($isAssociative($value)) {
                     return $this->sendDebug(
                         'table',
                         array(
                             array(
                                 array_keys($value),
                                 array_map(
-                                    function($v){return $this->tableFlatten($v);},
+                                    function ($v) use ($tableFlatten) {return $tableFlatten($v);},
                                     array_values($value)
                                 )
                             )
@@ -353,11 +367,11 @@ namespace debugChannel {
                     if (is_object($row) or is_array($row)) {
                         foreach($row as $k => $v) {
                             $index = $headerToIndex[$k];
-                            $tableRow[$index] = $this->tableFlatten($v);
+                            $tableRow[$index] = $tableFlatten($v);
                         }
                     } else {
                         $index = $headerToIndex["value"];
-                        $tableRow[$index] = $this->tableFlatten($row);
+                        $tableRow[$index] = $tableFlatten($row);
                     }
                     $table[] = $tableRow;
                 }
@@ -365,21 +379,9 @@ namespace debugChannel {
             }
 
 
-            return $this->table(array("value" => $this->tableFlatten($value)));
+            return $this->table(array("value" => $tableFlatten($value)));
         }
 
-        private function tableFlatten($value) {
-            if(is_object($value) or is_array($value)) {
-                return json_encode($value);
-            } else {
-                return $value;
-            }
-        }
-
-        private function isAssociative($arr)
-        {
-            return array_keys($arr) !== range(0, count($arr) - 1);
-        }
 
         /**
          * publishes a raw string as is
