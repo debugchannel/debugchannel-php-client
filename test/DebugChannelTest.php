@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../src/debugchannel/DebugChannel.php';
+require_once __DIR__ . '/../src/DebugChannel.php';
 
 class MockedDebugChannel extends DebugChannel
 {
@@ -352,9 +352,9 @@ class DebugChannelTest extends \PHPUnit_Framework_TestCase
                 false
             ),
             // relative paths
-            array("test/debugchannel/testImage.png", true),
+            array("test/testImage.png", true),
             array(
-                base64_encode(file_get_contents("test/debugchannel/testImage.png")),
+                base64_encode(file_get_contents("test/testImage.png")),
                 false
             )
         );
