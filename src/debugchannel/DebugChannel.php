@@ -1,852 +1,10 @@
 <?php
 
-
 namespace debugChannel {
-
-    /**
-     * PHP client for debugchannel
-     */
-    class DebugChannel
-    {
-
-        /**
-         * default value for senderName when sending chat messages.
-         * @const ANON_IDENtIFIER
-         */
-        const ANON_IDENTIFIER = 'PHP-client';
-        const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
-        const NO_IDENTIFIER = '__NONE__';
-
-        /**#@+
-         * @access private
-         */
-
-        /**
-         * Hostname of debug channel server
-         *
-         * eg. eg,  192.168.2.17, 127.0.0.1, localhost
-         * Domain names or ip addresses can be used.
-         *
-         * @var string
-         */
-        private $host;
-
-        /**
-         * @var string Non empty string of the channel you wish to post to
-         */
-        private $channel;
-
-        /**
-         * @var string Apikey to use with a debug channel account. Optional.
-         */
-        private $apiKey;
-
-        /**
-         * See, Allowed options include the phpRef ones below
-         */
-        private $options = array(
-            "showPrivateMembers" => true,
-            "expLvl" => 1,
-            "maxDepth" => 3
-        );
-
-        /**
-         * List of the options that'll be passed to phpRef
-         * @var array
-         */
-        private $phpRefOptionsAllowed = array('expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches');
-
-        /**
-         * Private static process identifier
-         * @var string
-         */
-        private static $pid;
-
-        /**
-         * Private static machine identifier
-         */
-        private static $machineId;
-
-        /**
-         * Monotonically increasing seqence number for message
-         * @var int
-         */
-        private static $messageSequenceNo;
-
-        /**#@-*/
-
-        /**#@+
-         * @access public
-         */
-
-        /**
-         * Create a DebugChannel object bound to a specific channel and server.
-         *
-         * options can be provided which customize how explore works.
-         * the options available are:
-         * <table>
-         * <thead><tr>
-         * <th align="left">Option</th>
-         * <th align="left">Default</th>
-         * <th align="left">Description</th>
-         * </tr></thead>
-         * <tbody>
-         * <tr>
-         * <td align="left"><code>'expLvl'</code></td>
-         * <td align="left"><code>1</code></td>
-         * <td align="left">Initially expanded levels (for HTML mode only). A negative value will expand all levels</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'maxDepth'</code></td>
-         * <td align="left"><code>6</code></td>
-         * <td align="left">Maximum depth (<code>0</code> to disable); note that disabling it or setting a high value can produce a 100+ MB page when input involves large data</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'showIteratorContents'</code></td>
-         * <td align="left"><code>FALSE</code></td>
-         * <td align="left">Display iterator data (keys and values)</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'showResourceInfo'</code></td>
-         * <td align="left"><code>TRUE</code></td>
-         * <td align="left">Display additional information about resources</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'showMethods'</code></td>
-         * <td align="left"><code>TRUE</code></td>
-         * <td align="left">Display methods and parameter information on objects</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'showPrivateMembers'</code></td>
-         * <td align="left"><code>FALSE</code></td>
-         * <td align="left">Include private properties and methods</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'showStringMatches'</code></td>
-         * <td align="left"><code>TRUE</code></td>
-         * <td align="left">Perform and display string matches for dates, files, json strings, serialized data, regex patterns etc. (SLOW)</td>
-         * </tr>
-         * <tr>
-         * <td align="left"><code>'formatters'</code></td>
-         * <td align="left"><code>array()</code></td>
-         * <td align="left">Custom/external formatters (as associative array: format =&gt; className)</td>
-         * </tr>
-         * </tbody>
-         * </table>
-         *
-         * @param string $host  the string is the address of debug channel server
-         * @param string $channel  the channel to publish all messages on
-         * @param string $apiKey the apiKey of the user who is publishing the messages. default is null.
-         * @param array $options  options array to configure the way explore traverses the object graph and renders it.
-         *
-         */
-        public function __construct( $host, $channel, $apiKey = null, array $options = array() )
-        {
-            $this->host = (string) $host;
-            $this->setChannel($channel);
-            if( null !== $apiKey and !is_string($apiKey) ) {
-                throw new \InvalidArgumentException("apiKey must be a string.");
-            }
-            $this->apiKey = $apiKey;
-            $this->setOptions($options);
-        }
-
-        /**
-         * provides getter methods for all properties private and public
-         *
-         * all properties will get a a getter method.
-         * for exmaple the private property $name of type string
-         * will get a getter method with the signature:
-         * <pre><code>public function name() :: string</code></pre>
-         *
-         * @param string $property  The string which represents the name of the property to return.
-         * @return mixed  Value of property.
-         * @deprecated Use the explicit getter methods.
-         * @throws \InvalidArgumentException when no property exists with the name.
-         */
-        public function __get( $property )
-        {
-            if( property_exists( $this, $property ) ) {
-                return $this->$property;
-            }
-            throw new \InvalidArgumentException("Unknown property `{$property}`.");
-        }
-
-        /**
-         * Set the channel you with to subscribe to
-         *
-         * the channel is the in form \w+[/\w+]* for example:
-         * <ul>
-         *   <li>hello/world</li>
-         *   <li>logs</li>
-         *   <li>project/team/chat</li>
-         * </ul>
-         *
-         * @param string $channel  Channel to use
-         * @return debugChannel\DebugChannel
-         */
-        public function setChannel( $channel )
-        {
-            $this->channel = ltrim( (string) $channel, '/' );
-            return $this;
-        }
-
-        /**
-         * set phpref options that will be used by this instance of D
-         *
-         * @param array $options  the associtivate array of options, available options specified in constructors documentation
-         * @return debugChannel\DebugChannel
-         */
-        public function setOptions( array $options )
-        {
-            $this->options = array_merge($this->options, $options);
-            return $this;
-        }
-
-        /**
-         * gets the options set
-         *
-         * @return array   associative array of options mapping option name to option value
-         */
-        protected function getPhpRefOptions()
-        {
-            $phpRefOptions = array_intersect_key(
-                $this->options,
-                array_flip( $this->phpRefOptionsAllowed )
-            );
-            $phpRefOptions['stylePath'] = false;
-            $phpRefOptions['scriptPath'] = false;
-            return $phpRefOptions;
-        }
-
-        /**
-         * Get the debug server url
-         *
-         * Contains both the host and channel.
-         *
-         * @return string   the string is the url where the debugger can be accessed from
-         */
-        public function getRequestUrl()
-        {
-            return "{$this->host}/{$this->channel}";
-        }
-
-        /**
-         * Alias for ->explore().
-         * @see debugchannel\DebugChannel
-         */
-        public function __invoke( $dataToLog, array $tags = array() )
-        {
-            return call_user_func(
-                array( $this, 'log'),
-                func_get_args()
-            );
-        }
-
-        /**
-         * Alias for ->explore().
-         * @see debugchannel\DebugChannel
-         */
-        public function log( $dataToLog, array $tags = array() )
-        {
-            return $this->explore($dataToLog, $tags);
-        }
-
-        /**
-         * publishes an interactable object graph
-         *
-         * if val is an object or array it will generate an object graph.
-         * if val is a primitive such as int, string, etc then it just displays the value.
-         * It can detect recursion, replacing the reference with a "RECURSION" string.
-         * $val is not modified.
-         * @param mixed $val  the mixed value to publish
-         * @return DebugChannel  the DebugChannel object bound to $this
-         */
-        public function explore( $dataToLog, array $tags = array() )
-        {
-            $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
-
-            // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
-            $ref = new Ref(new RHtmlSpanFormatter());
-
-            ob_start();
-            $ref->query( $dataToLog, null );
-            $html = ob_get_clean();
-
-            $this->makeRequest(
-                array(
-                    'handler' => 'php-ref',
-                    'args' => array(
-                        $html,
-                    ),
-                    'tags' => $tags,
-                )
-            );
-
-            $this->setRefConfig($originalRefOptions);
-            return $this;
-        }
-
-        /**
-         * publishes the 2-dimensional array as a table
-         *
-         * given a 2-dimensional array, treat it as a table when rendering it.
-         * In the browser it will be shown as a table, with the first dimension being
-         * the rows, and the second dimension being columns.
-         * The values of each cell should be primtives, ie string, int, etc but can be objects.
-         * the exact method of displaying the objects is undefined hence it is advised that the
-         * cells are primtives.
-         *
-         * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
-         * @return DebugChannel  the DebugChannel instance bound to $this
-         */
-        public function table($value)
-        {
-
-            $tableFlatten = function ($value) {
-                if(is_object($value) or is_array($value)) {
-                    return json_encode($value);
-                } else {
-                    return $value;
-                }
-            };
-
-            $isAssociative = function ($arr)
-            {
-                return array_keys($arr) !== range(0, count($arr) - 1);
-            };
-
-            // object
-            if (is_object($value)) {
-                $formatted = array();
-                foreach ($value as $k => $v) {
-                    $formatted[$k] = $v;
-                }
-                return $this->table($formatted);
-            }
-
-
-            if (is_array($value)) {
-
-                // handles associtivate array
-                if ($isAssociative($value)) {
-                    return $this->sendDebug(
-                        'table',
-                        array(
-                            array(
-                                array_keys($value),
-                                array_map(
-                                    function ($v) use ($tableFlatten) {return $tableFlatten($v);},
-                                    array_values($value)
-                                )
-                            )
-                        )
-                    );
-                }
-
-                // handles indexed array
-                $headers = array();
-                foreach ($value as $row) {
-                    if (is_object($row) or is_array($row)) {
-                        foreach ($row as $k => $v) {
-                            if (!in_array($k, $headers)) {
-                                $headers[] = $k;
-                            }
-                        }
-                    } else {
-                        if (!in_array("value", $headers)) {
-                            $headers[] = "value";
-                        }
-                    }
-                }
-
-                $headerToIndex = array_flip($headers);
-                $table = array($headers);
-                foreach ($value as $row) {
-                    $tableRow = array_fill(0, count($headers), null);
-                    if (is_object($row) or is_array($row)) {
-                        foreach($row as $k => $v) {
-                            $index = $headerToIndex[$k];
-                            $tableRow[$index] = $tableFlatten($v);
-                        }
-                    } else {
-                        $index = $headerToIndex["value"];
-                        $tableRow[$index] = $tableFlatten($row);
-                    }
-                    $table[] = $tableRow;
-                }
-                return $this->sendDebug('table', array($table));
-            }
-
-
-            return $this->table(array("value" => $tableFlatten($value)));
-        }
-
-
-        /**
-         * publishes a raw string as is
-         *
-         * the string is publishes as a plain string without formatting.
-         * it cannot be null, and cannot be any other primtive such as int.
-         *
-         * @param string $text  the string to publish as raw text
-         * @return DebugChannel the DebugChannel instance bound to $this.
-         */
-        public function string($text)
-        {
-            return $this->sendDebug('string', (string) $text);
-        }
-
-        /**
-         * publishes a string with syntax highlighting for the given language.
-         *
-         * the string is treaded as code and highlighed and formatted for that given language.
-         * the complete list of languages that are supported are available <a href="https://github.com/isagalaev/highlight.js/tree/master/src/languages">here</a>.
-         * this list includes:
-         * <ul>
-         *   <ui>bash</ui>
-         *   <ui>cpp(c++)</ui>
-         *   <ui>cs(c#)</ui>
-         *   <ui>java</ui>
-         *   <ui>javascript<ui>
-         *   <ui>python</ui>
-         *   <ui>php</ui>
-         *   <ui>sql</ui>
-         *   <ui>xml</ui>
-         *   <ui>json</ui>
-         * </ul>
-         *
-         * @param string $text  the string which contains the code to syntax highlight
-         * @param string $lang  the string that represents the language the $text is in.
-         * some languages will have a slight varient on what its called, ie c++ is cpp.
-         * Default sql.
-         * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
-         * @return DebugChannel  the DebugChannel instance bound to $this.
-         * @throws \InvalidArgumentException if $text is not a string|number|bool
-         */
-        public function code( $text, $lang = 'sql', $deIndent = true )
-        {
-            // validates $text
-            if (is_numeric($text) or is_bool($text)) {
-                print_r($text);
-                $text = (string)$text;
-            } else if (!is_string($text)) {
-                throw new \InvalidArgumentException('DebugChannel::code only accepts scalars for $text argument');
-            }
-
-            // validates $lang
-            if (!is_string($lang) or trim($lang) === "") {
-                throw new \InvalidArgumentException('DebugChannel::code $lang must be a language name, not ' . gettype($lang));
-            }
-
-            if( $deIndent and !in_array($text, array(null, ""))) {
-                $text = $this->deIndent($text);
-            }
-            $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace));
-        }
-
-        /**
-         * publishes an image to the browser.
-         *
-         * encodes an image in using base64 encoding to be rendered as an image resized to fit the debug box.
-         * the image can be specified by its location in the filesystem or as a base64 encoded string.
-         * the following file formats are allowed: jpg, bmp, and png.
-         *
-         * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative.
-         * the string can also contain the image in base64 format.
-         * @return DebugChannel  the DebugChannel instance bound to $this.
-         */
-        public function image($identifier)
-        {
-            if (!is_string($identifier) or trim($identifier) === "") {
-                throw new \InvalidArgumentException(
-                    'DebugChannel::image takes a string as a argument not a ' . gettype($identifier)
-                );
-            }
-            // is a file
-            $isFile = file_exists($identifier);
-            $isFile = $isFile or strpos($identifier, '.') != false;
-            $isFile = $isFile or strpos($identifier, '/') != false;
-
-            // $identifier looks like a path but does it exist
-            if ($isFile and !is_file($identifier)) {
-                throw new \InvalidArgumentException("path is valid but is not a file: " . $identifier);
-            }
-
-            $base64 = $isFile ? base64_encode(file_get_contents($identifier)) : $identifier;
-            return $this->sendDebug('image', $base64);
-        }
-
-        /**
-         * publishes a messages like a chat message in an IM client.
-         *
-         *
-         * publishes the message text with a senders name attached.
-         * the senderName can be anything, and  does not need to be the same on every consecutive call.
-         *
-         * @param string $message  the string containing the message to publish as IM message
-         * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
-         * @return DebugChannel  the DebugChannel instance bound to $this.
-         */
-        public function chat($message, $senderName=null)
-        {
-            if (is_null($senderName)) {
-                $senderName = self::ANON_IDENTIFIER;
-            }
-
-            if (!is_string($message)) {
-                throw new \InvalidArgumentException(
-                    'DebugChannel::chat requires $message to be a string, not ' . gettype($message)
-                );
-            }
-            if (!is_string($senderName)) {
-                throw new \InvalidArgumentException(
-                    'DebugChannel::chat requires $senderName to be a string, not ' . gettype($senderName)
-                );
-            }
-            return $this->sendDebug('chat', array($senderName, $message));
-        }
-
-        /**
-         * removes all debugs in the channel for all users
-         *
-         * can be called at any point, event if there are no debugs in the channel.
-         * if multiple clients are publishing to the same channel, this will remove their debugs as well.
-         * if multiple people are viewing the channel in browser then every user will be effected
-         *
-         * @return DebugChannel  the DebugChannel instance bound to $this.
-         */
-        public function clear()
-        {
-            return $this->sendDebug('clear');
-        }
-
-        /**
-         * displays a help message in the browser's channel
-         *
-         * displays documentation in the browser showing hwo to use DebugChannel php-client
-         * and examples of different use cases.
-         * stdout is not effected by calling this method
-         *
-         * @return debugchannel\DebugChannel the DebugChannel instance that $this is bound to
-         */
-        public function help()
-        {
-            return $this->sendDebug('help', array('php'));
-        }
-
-        /**#@-*/
-
-        protected function sendDebug ($handler, $args = array(), $stacktrace = array())
-        {
-            $this->makeRequest(
-                array(
-                    'handler' => $handler,
-                    'args' => is_array($args) ? $args : array($args),
-                    'stacktrace' => $stacktrace
-                )
-            );
-            return $this;
-        }
-
-        protected function filloutRequest( array $data, $inputExpressions )
-        {
-
-            $trace = defined('DEBUG_BACKTRACE_IGNORE_ARGS') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
-            $offset = 1;
-            // this loop construct starts on the second element
-            while( $working = next($trace) and ( $file = isset($working['file']) ? $working['file'] : $file ) and __FILE__ === $file ) {
-                $offset++;
-            }
-            $trace = array_slice($trace, $offset);
-            if( $inputExpressions ) {
-                $trace[0]['what'] = $inputExpressions[0];
-            }
-            // exclude all but the first call to __CLASS__, renumber array
-            $data['trace'] = $this->formatTrace( $trace );
-            // tags are a required field
-            $data['tags'] = isset($data['tags']) ? $data['tags'] : array();
-
-            // add apiKey to request if set
-            if( null !== $this->apiKey ) {
-                $data['apiKey'] = (string) $this->apiKey;
-            }
-
-            // process id
-            $data['info'] = $this->getInfoArray();
-
-            return $data;
-
-        }
-
-        protected function makeRequest( $data )
-        {
-
-            // get input expressions
-            $options = array();
-            $inputExpressions = $this->getInputExpressions($options);
-
-            $data = $this->filloutRequest( $data, $inputExpressions );
-
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
-            curl_setopt($ch, CURLOPT_TIMEOUT, 2);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json') );
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data) );
-            // argh
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            $response = curl_exec($ch);
-            $curlInfo = curl_getinfo($ch);
-
-            // have any problems
-            if( $response === false ) {
-                throw new \Exception("Unable to connect to debugger as `{$url}`");
-            } elseif ( $curlInfo['http_code'] === 413 ) {
-                // Requested entity too large
-                $additionalInfo = '';
-                if( 'php-ref' === $data['handler'] ) {
-                    $phprefOption = $this->getPhpRefOptions();
-                    $additionalInfo = sprintf(
-                        "Try lowering the option 'maxDepth' (currently set to %s).",
-                        isset( $phprefOption['maxDepth'] ) ? $phprefOption['maxDepth'] : Ref::config('maxDepth')
-                    );
-                }
-                throw new \Exception($response.$additionalInfo);
-            } elseif ( $curlInfo['http_code'] !== 200 ) {
-                throw new \Exception($response);
-            }
-
-            // print_r( $options );
-            // exit early
-            if( in_array('!', $options) ) {
-                exit(0);
-            }
-
-            return $this;
-
-        }
-
-        /**
-         * Get client identifier
-         * @return bool|string
-         */
-        protected function getIdentifier()
-        {
-            switch( $options['identifier'] ) {
-                case self::ANON_IDENTIFIER:
-                    return 'anon';
-                case self::DESCRIPTIVE_IDENTIFIER:
-                    return 'descriptive';
-                case self::NO_IDENTIFIER;
-                    return false;
-            }
-            return $options['identifier'];
-        }
-
-        protected function setRefConfig( array $options )
-        {
-            $output = array();
-            foreach( $options as $option => $value ) {
-                $output[$option] = ref::config($option);
-                ref::config($option, $value);
-            }
-            return $output;
-        }
-
-        protected function formatTrace( $trace )
-        {
-            return array_map(
-                function ( $component ) {
-                    if( isset($component['file'], $component['line']) and $component['line'] > 0 ) {
-                        $location = sprintf( "%s(%s): ", $component['file'], $component['line'] );
-                    } else {
-                        $location = '';
-                    }
-
-                    $fn = isset( $component['class'] ) ? "{$component['class']}{$component['type']}" : '';
-                    $fn .= "{$component['function']}()";
-
-                    $output = array(
-                        'location' => $location,
-                        'fn' => $fn
-                    );
-                    if(isset($component['what']) ) {
-                        $output['what'] = $component['what'];
-                    }
-                    return $output;
-                },
-                $trace
-             );
-        }
-
-        protected function deIndent( $text )
-        {
-            $leadingWhitespace = array();
-            $text = explode("\n", $text);
-            foreach( $text as $line ) {
-                if( !empty( $line ) ) {
-                    $leadingWhitespace[] = strlen( $line ) - strlen( ltrim( $line ) );
-                }
-            }
-            $indent = min( $leadingWhitespace );
-            foreach( $text as &$line ) {
-                $line = substr( $line, $indent );
-            }
-            return implode("\n", $text);
-        }
-
-        protected function getInfoArray()
-        {
-            return array(
-                'machineId' => $this->getMachineId(),
-                'pid' => $this->getPid(),
-                'sequenceNo' => ++self::$messageSequenceNo,
-                'generationTime' => microtime(true),
-            );
-        }
-
-        protected function getPid()
-        {
-            // process information
-            if( !isset(self::$pid) ) {
-                // whatever this can change
-                self::$pid = md5( microtime(). getmypid() );
-            }
-            return self::$pid;
-        }
-
-        protected function getMachineId()
-        {
-            if( !isset(self::$machineId) ) {
-                self::$machineId = php_uname('n');
-            }
-            return self::$machineId;
-        }
-
-        // based on https://github.com/digitalnature/php-ref/blob/master/ref.php
-        protected function getInputExpressions(array &$options = null){
-
-            // used to determine the position of the current call,
-            // if more queries calls were made on the same line
-            static $lineInst = array();
-
-            // pull only basic info with php 5.3.6+ to save some memory
-            $trace = defined('DEBUG_BACKTRACE_IGNORE_ARGS') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
-
-            while($callee = array_shift($trace)){
-
-                // extract only the information we neeed
-                $callee = array_intersect_key($callee, array_fill_keys(array('file', 'function', 'line', 'class', 'type'), false));
-                extract($callee);
-
-                // skip, if this code is called by any code in this file
-                // this could probably be hardened - there are only a couple of code paths to check for
-                //   1. via the static functions which can be detected by the presence of CacheDebugChannel::delegateGlobalFunction
-                //   2. by a public method on __CLASS__
-                // for now just check to see if we are being called from the right file
-                if( $file === __FILE__ )
-                    continue;
-
-                if(!$line || !$file)
-                    return array();
-
-                $code     = file($file);
-                $code     = $code[$line - 1]; // multiline expressions not supported!
-                $instIndx = 0;
-                $tokens   = token_get_all("<?php {$code}");
-
-                // locate the caller position in the line, and isolate argument tokens
-                foreach($tokens as $i => $token){
-
-                    // match token with our shortcut function name
-                    if(is_string($token) || ($token[0] !== T_STRING) || (strcasecmp($token[1], $function) !== 0))
-                        continue;
-
-                    // is this some method that happens to have the same name as the shortcut function?
-                    // Pete. We can't perform this test because this code might well be called from a object context
-                    // if(isset($tokens[$i - 1]) && is_array($tokens[$i - 1]) && in_array($tokens[$i - 1][0], array(T_DOUBLE_COLON, T_OBJECT_OPERATOR), true))
-                    //    continue;
-
-                    // find argument definition start, just after '('
-                    if(isset($tokens[$i + 1]) && ($tokens[$i + 1][0] === '(')){
-                        $instIndx++;
-
-                        if(!isset($lineInst[$line]))
-                            $lineInst[$line] = 0;
-
-                        if($instIndx <= $lineInst[$line])
-                            continue;
-
-                        $lineInst[$line]++;
-
-                        // gather options
-                        if($options !== null){
-                            $j = $i - 1;
-                            // is previous token a object operator?
-                            if( isset($tokens[$j]) && is_array($tokens[$j]) && in_array($tokens[$j][0], array(T_DOUBLE_COLON, T_OBJECT_OPERATOR), true) ) {
-                                // shift the object_operator and the object|object variable
-                                $j = $j-2;
-                            }
-                            while(isset($tokens[$j]) && is_string($tokens[$j]) && in_array($tokens[$j], array('@', '+', '-', '!', '~')))
-                                $options[] = $tokens[$j--];
-                        }
-
-                        $lvl = $index = $curlies = 0;
-                        $expressions = array();
-
-                        // get the expressions
-                        foreach(array_slice($tokens, $i + 2) as $token){
-
-                            if(is_array($token)){
-                              if($token[0] !== T_COMMENT)
-                                $expressions[$index][] = ($token[0] !== T_WHITESPACE) ? $token[1] : ' ';
-
-                              continue;
-                            }
-
-                            if($token === '{')
-                                $curlies++;
-
-                            if($token === '}')
-                                $curlies--;
-
-                            if($token === '(')
-                                $lvl++;
-
-                            if($token === ')')
-                                $lvl--;
-
-                            // assume next argument if a comma was encountered,
-                            // and we're not insde a curly bracket or inner parentheses
-                            if(($curlies < 1) && ($lvl === 0) && ($token === ',')){
-                                $index++;
-                                continue;
-                            }
-
-                            // negative parentheses count means we reached the end of argument definitions
-                            if($lvl < 0){
-                                foreach($expressions as &$expression)
-                                    $expression = trim(implode('', $expression));
-
-                                return $expressions;
-                            }
-
-                            $expressions[$index][] = $token;
-                        }
-
-                        break;
-                    }
-                }
-            }
-        }
-
-    }
 
     // backwards compatible D
     // now with added deprecated message
-    class D extends DebugChannel
+    class D extends \DebugChannel
     {
         protected function filloutRequest( array $data, $inputExpressions )
         {
@@ -2732,8 +1890,6 @@ namespace debugChannel {
 
     }
 
-
-
     /**
      * Formatter abstraction
      */
@@ -3275,7 +2431,7 @@ namespace debugChannel {
     function build_debugchannel_from_config( Config $config, $throwError = true )
     {
         if( $config->isValid($error) ) {
-            return new DebugChannel(
+            return new \DebugChannel(
                 $config->host,
                 $config->channel,
                 $config->apiKey,
@@ -3291,6 +2447,881 @@ namespace debugChannel {
 
 namespace {
 
+    if( !defined( 'EXPAND' ) ) { define( 'EXPAND', 1 ); }
+    if( !defined( 'DIE' ) ) { define( 'DIE', 2 ); }
+
+    /**
+     * PHP client for debugchannel
+     */
+    class DebugChannel
+    {
+
+        /**
+         * default value for senderName when sending chat messages.
+         * @const ANON_IDENtIFIER
+         */
+        const ANON_IDENTIFIER = 'PHP-client';
+        const DESCRIPTIVE_IDENTIFIER = '__DESCRIPTIVE__';
+        const NO_IDENTIFIER = '__NONE__';
+
+        /**#@+
+         * @access private
+         */
+
+        /**
+         * Hostname of debug channel server
+         *
+         * eg. eg,  192.168.2.17, 127.0.0.1, localhost
+         * Domain names or ip addresses can be used.
+         *
+         * @var string
+         */
+        private $host;
+
+        /**
+         * @var string Non empty string of the channel you wish to post to
+         */
+        private $channel;
+
+        /**
+         * @var string Apikey to use with a debug channel account. Optional.
+         */
+        private $apiKey;
+
+        /**
+         * See, Allowed options include the phpRef ones below
+         */
+        private $options = array(
+            "showPrivateMembers" => true,
+            "expLvl" => 1,
+            "maxDepth" => 3
+        );
+
+        /**
+         * List of the options that'll be passed to phpRef
+         * @var array
+         */
+        private $phpRefOptionsAllowed = array('expLvl', 'maxDepth', 'showIteratorContents', 'showMethods', 'showPrivateMembers', 'showStringMatches');
+
+        /**
+         * Private static process identifier
+         * @var string
+         */
+        private static $pid;
+
+        /**
+         * Private static machine identifier
+         */
+        private static $machineId;
+
+        /**
+         * Monotonically increasing seqence number for message
+         * @var int
+         */
+        private static $messageSequenceNo;
+
+        /**#@-*/
+
+        /**#@+
+         * @access public
+         */
+
+        /**
+         * Create a DebugChannel object bound to a specific channel and server.
+         *
+         * options can be provided which customize how explore works.
+         * the options available are:
+         * <table>
+         * <thead><tr>
+         * <th align="left">Option</th>
+         * <th align="left">Default</th>
+         * <th align="left">Description</th>
+         * </tr></thead>
+         * <tbody>
+         * <tr>
+         * <td align="left"><code>'expLvl'</code></td>
+         * <td align="left"><code>1</code></td>
+         * <td align="left">Initially expanded levels (for HTML mode only). A negative value will expand all levels</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'maxDepth'</code></td>
+         * <td align="left"><code>6</code></td>
+         * <td align="left">Maximum depth (<code>0</code> to disable); note that disabling it or setting a high value can produce a 100+ MB page when input involves large data</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showIteratorContents'</code></td>
+         * <td align="left"><code>FALSE</code></td>
+         * <td align="left">Display iterator data (keys and values)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showResourceInfo'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Display additional information about resources</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showMethods'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Display methods and parameter information on objects</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showPrivateMembers'</code></td>
+         * <td align="left"><code>FALSE</code></td>
+         * <td align="left">Include private properties and methods</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'showStringMatches'</code></td>
+         * <td align="left"><code>TRUE</code></td>
+         * <td align="left">Perform and display string matches for dates, files, json strings, serialized data, regex patterns etc. (SLOW)</td>
+         * </tr>
+         * <tr>
+         * <td align="left"><code>'formatters'</code></td>
+         * <td align="left"><code>array()</code></td>
+         * <td align="left">Custom/external formatters (as associative array: format =&gt; className)</td>
+         * </tr>
+         * </tbody>
+         * </table>
+         *
+         * @param string $host  the string is the address of debug channel server
+         * @param string $channel  the channel to publish all messages on
+         * @param string $apiKey the apiKey of the user who is publishing the messages. default is null.
+         * @param array $options  options array to configure the way explore traverses the object graph and renders it.
+         *
+         */
+        public function __construct( $host, $channel, $apiKey = null, array $options = array() )
+        {
+            $this->host = (string) $host;
+            $this->setChannel($channel);
+            if( null !== $apiKey and !is_string($apiKey) ) {
+                throw new \InvalidArgumentException("apiKey must be a string.");
+            }
+            $this->apiKey = $apiKey;
+            $this->setOptions($options);
+        }
+
+        /**
+         * provides getter methods for all properties private and public
+         *
+         * all properties will get a a getter method.
+         * for exmaple the private property $name of type string
+         * will get a getter method with the signature:
+         * <pre><code>public function name() :: string</code></pre>
+         *
+         * @param string $property  The string which represents the name of the property to return.
+         * @return mixed  Value of property.
+         * @deprecated Use the explicit getter methods.
+         * @throws \InvalidArgumentException when no property exists with the name.
+         */
+        public function __get( $property )
+        {
+            if( property_exists( $this, $property ) ) {
+                return $this->$property;
+            }
+            throw new \InvalidArgumentException("Unknown property `{$property}`.");
+        }
+
+        /**
+         * Set the channel you with to subscribe to
+         *
+         * the channel is the in form \w+[/\w+]* for example:
+         * <ul>
+         *   <li>hello/world</li>
+         *   <li>logs</li>
+         *   <li>project/team/chat</li>
+         * </ul>
+         *
+         * @param string $channel  Channel to use
+         * @return debugChannel\DebugChannel
+         */
+        public function setChannel( $channel )
+        {
+            $this->channel = ltrim( (string) $channel, '/' );
+            return $this;
+        }
+
+        /**
+         * set phpref options that will be used by this instance of D
+         *
+         * @param array $options  the associtivate array of options, available options specified in constructors documentation
+         * @return debugChannel\DebugChannel
+         */
+        public function setOptions( array $options )
+        {
+            $this->options = array_merge($this->options, $options);
+            return $this;
+        }
+
+        /**
+         * gets the options set
+         *
+         * @return array   associative array of options mapping option name to option value
+         */
+        protected function getPhpRefOptions()
+        {
+            $phpRefOptions = array_intersect_key(
+                $this->options,
+                array_flip( $this->phpRefOptionsAllowed )
+            );
+            $phpRefOptions['stylePath'] = false;
+            $phpRefOptions['scriptPath'] = false;
+            return $phpRefOptions;
+        }
+
+        /**
+         * Get the debug server url
+         *
+         * Contains both the host and channel.
+         *
+         * @return string   the string is the url where the debugger can be accessed from
+         */
+        public function getRequestUrl()
+        {
+            return "{$this->host}/{$this->channel}";
+        }
+
+        /**
+         * Alias for ->explore().
+         * @see debugchannel\DebugChannel
+         */
+        public function __invoke( $dataToLog, $options = null, array $tags = array() )
+        {
+            return call_user_func(
+                array( $this, 'explore'),
+                func_get_args()
+            );
+        }
+
+        /**
+         * Alias for ->explore().
+         * @see debugchannel\DebugChannel
+         */
+        public function log( $dataToLog, $options = null, array $tags = array() )
+        {
+            return call_user_func(
+                array( $this, 'explore'),
+                func_get_args()
+            );
+        }
+
+        /**
+         * publishes an interactable object graph
+         *
+         * if val is an object or array it will generate an object graph.
+         * if val is a primitive such as int, string, etc then it just displays the value.
+         * It can detect recursion, replacing the reference with a "RECURSION" string.
+         * $val is not modified.
+         * @param mixed $val  the mixed value to publish
+         * @param mixed $options configure different behaviour for each request
+         * @return DebugChannel  the DebugChannel object bound to $this
+         */
+        public function explore( $dataToLog, $options = null, array $tags = array() )
+        {
+            $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
+
+            // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
+            $ref = new \debugchannel\Ref( new debugchannel\RHtmlSpanFormatter() );
+
+            ob_start();
+            $ref->query( $dataToLog, null );
+            $html = ob_get_clean();
+
+            $this->makeRequest(
+                array(
+                    'handler' => 'php-ref',
+                    'args' => array(
+                        $html,
+                    ),
+                    'tags' => $tags,
+                ),
+                $options
+            );
+
+            $this->setRefConfig($originalRefOptions);
+            return $this;
+        }
+
+        /**
+         * publishes the 2-dimensional array as a table
+         *
+         * given a 2-dimensional array, treat it as a table when rendering it.
+         * In the browser it will be shown as a table, with the first dimension being
+         * the rows, and the second dimension being columns.
+         * The values of each cell should be primtives, ie string, int, etc but can be objects.
+         * the exact method of displaying the objects is undefined hence it is advised that the
+         * cells are primtives.
+         *
+         * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
+         * @return DebugChannel  the DebugChannel instance bound to $this
+         */
+        public function table($value, $options = null)
+        {
+
+            $tableFlatten = function ($value) {
+                if(is_object($value) or is_array($value)) {
+                    return json_encode($value);
+                } else {
+                    return $value;
+                }
+            };
+
+            $isAssociative = function ($arr)
+            {
+                return array_keys($arr) !== range(0, count($arr) - 1);
+            };
+
+            // object
+            if (is_object($value)) {
+                $formatted = array();
+                foreach ($value as $k => $v) {
+                    $formatted[$k] = $v;
+                }
+                return $this->table($formatted);
+            }
+
+
+            if (is_array($value)) {
+
+                // handles associtivate array
+                if ($isAssociative($value)) {
+                    return $this->sendDebug(
+                        'table',
+                        array(
+                            array(
+                                array_keys($value),
+                                array_map(
+                                    function ($v) use ($tableFlatten) {return $tableFlatten($v);},
+                                    array_values($value)
+                                )
+                            )
+                        )
+                    );
+                }
+
+                // handles indexed array
+                $headers = array();
+                foreach ($value as $row) {
+                    if (is_object($row) or is_array($row)) {
+                        foreach ($row as $k => $v) {
+                            if (!in_array($k, $headers)) {
+                                $headers[] = $k;
+                            }
+                        }
+                    } else {
+                        if (!in_array("value", $headers)) {
+                            $headers[] = "value";
+                        }
+                    }
+                }
+
+                $headerToIndex = array_flip($headers);
+                $table = array($headers);
+                foreach ($value as $row) {
+                    $tableRow = array_fill(0, count($headers), null);
+                    if (is_object($row) or is_array($row)) {
+                        foreach($row as $k => $v) {
+                            $index = $headerToIndex[$k];
+                            $tableRow[$index] = $tableFlatten($v);
+                        }
+                    } else {
+                        $index = $headerToIndex["value"];
+                        $tableRow[$index] = $tableFlatten($row);
+                    }
+                    $table[] = $tableRow;
+                }
+                return $this->sendDebug('table', array($table), $options);
+            }
+
+
+            return $this->table(array("value" => $tableFlatten($value)));
+        }
+
+
+        /**
+         * publishes a raw string as is
+         *
+         * the string is publishes as a plain string without formatting.
+         * it cannot be null, and cannot be any other primtive such as int.
+         *
+         * @param string $text  the string to publish as raw text
+         * @return DebugChannel the DebugChannel instance bound to $this.
+         */
+        public function string($text, $options = null)
+        {
+            return $this->sendDebug('string', array( (string) $text ), $options );
+        }
+
+        /**
+         * publishes a string with syntax highlighting for the given language.
+         *
+         * the string is treaded as code and highlighed and formatted for that given language.
+         * the complete list of languages that are supported are available <a href="https://github.com/isagalaev/highlight.js/tree/master/src/languages">here</a>.
+         * this list includes:
+         * <ul>
+         *   <ui>bash</ui>
+         *   <ui>cpp(c++)</ui>
+         *   <ui>cs(c#)</ui>
+         *   <ui>java</ui>
+         *   <ui>javascript<ui>
+         *   <ui>python</ui>
+         *   <ui>php</ui>
+         *   <ui>sql</ui>
+         *   <ui>xml</ui>
+         *   <ui>json</ui>
+         * </ul>
+         *
+         * @param string $text  the string which contains the code to syntax highlight
+         * @param string $lang  the string that represents the language the $text is in.
+         * some languages will have a slight varient on what its called, ie c++ is cpp.
+         * Default sql.
+         * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
+         * @return DebugChannel  the DebugChannel instance bound to $this.
+         * @throws \InvalidArgumentException if $text is not a string|number|bool
+         */
+        public function code( $text, $lang = 'sql', $deIndent = true )
+        {
+            // validates $text
+            if (is_numeric($text) or is_bool($text)) {
+                print_r($text);
+                $text = (string)$text;
+            } else if (!is_string($text)) {
+                throw new \InvalidArgumentException('DebugChannel::code only accepts scalars for $text argument');
+            }
+
+            // validates $lang
+            if (!is_string($lang) or trim($lang) === "") {
+                throw new \InvalidArgumentException('DebugChannel::code $lang must be a language name, not ' . gettype($lang));
+            }
+
+            if( $deIndent and !in_array($text, array(null, ""))) {
+                $text = $this->deIndent($text);
+            }
+            $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
+            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace));
+        }
+
+        /**
+         * publishes an image to the browser.
+         *
+         * encodes an image in using base64 encoding to be rendered as an image resized to fit the debug box.
+         * the image can be specified by its location in the filesystem or as a base64 encoded string.
+         * the following file formats are allowed: jpg, bmp, and png.
+         *
+         * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative.
+         * the string can also contain the image in base64 format.
+         * @return DebugChannel  the DebugChannel instance bound to $this.
+         */
+        public function image($identifier, $options = null)
+        {
+            if (!is_string($identifier) or trim($identifier) === "") {
+                throw new \InvalidArgumentException(
+                    'DebugChannel::image takes a string as a argument not a ' . gettype($identifier)
+                );
+            }
+            // is a file
+            $isFile = file_exists($identifier);
+            $isFile = $isFile or strpos($identifier, '.') != false;
+            $isFile = $isFile or strpos($identifier, '/') != false;
+
+            // $identifier looks like a path but does it exist
+            if ($isFile and !is_file($identifier)) {
+                throw new \InvalidArgumentException("path is valid but is not a file: " . $identifier);
+            }
+
+            $base64 = $isFile ? base64_encode(file_get_contents($identifier)) : $identifier;
+            return $this->sendDebug('image', array($base64), $options) ;
+        }
+
+        /**
+         * publishes a messages like a chat message in an IM client.
+         *
+         *
+         * publishes the message text with a senders name attached.
+         * the senderName can be anything, and  does not need to be the same on every consecutive call.
+         *
+         * @param string $message  the string containing the message to publish as IM message
+         * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
+         * @return DebugChannel  the DebugChannel instance bound to $this.
+         */
+        public function chat($message, $senderName=null, $options = null)
+        {
+            if (is_null($senderName)) {
+                $senderName = self::ANON_IDENTIFIER;
+            }
+
+            if (!is_string($message)) {
+                throw new \InvalidArgumentException(
+                    'DebugChannel::chat requires $message to be a string, not ' . gettype($message)
+                );
+            }
+            if (!is_string($senderName)) {
+                throw new \InvalidArgumentException(
+                    'DebugChannel::chat requires $senderName to be a string, not ' . gettype($senderName)
+                );
+            }
+            return $this->sendDebug('chat', array($senderName, $message));
+        }
+
+        /**
+         * removes all debugs in the channel for all users
+         *
+         * can be called at any point, event if there are no debugs in the channel.
+         * if multiple clients are publishing to the same channel, this will remove their debugs as well.
+         * if multiple people are viewing the channel in browser then every user will be effected
+         *
+         * @return DebugChannel  the DebugChannel instance bound to $this.
+         */
+        public function clear( $options = null )
+        {
+            return $this->sendDebug('clear', array(), $options );
+        }
+
+        /**
+         * displays a help message in the browser's channel
+         *
+         * displays documentation in the browser showing hwo to use DebugChannel php-client
+         * and examples of different use cases.
+         * stdout is not effected by calling this method
+         *
+         * @return debugchannel\DebugChannel the DebugChannel instance that $this is bound to
+         */
+        public function help( $options = null )
+        {
+            return $this->sendDebug('help', array('php'), $options );
+        }
+
+        /**#@-*/
+
+        protected function sendDebug ($handler, array $args = array(), $options = null )
+        {
+            $this->makeRequest(
+                array(
+                    'handler' => $handler,
+                    'args' => $args,
+                ),
+                $options
+            );
+            return $this;
+        }
+
+        protected function filloutRequest( array $data, $inputExpressions )
+        {
+
+            $trace = defined('DEBUG_BACKTRACE_IGNORE_ARGS') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
+            $offset = 1;
+            // this loop construct starts on the second element
+            while( $working = next($trace) and ( $file = isset($working['file']) ? $working['file'] : $file ) and __FILE__ === $file ) {
+                $offset++;
+            }
+            $trace = array_slice($trace, $offset);
+            if( $inputExpressions ) {
+                $trace[0]['what'] = $inputExpressions[0];
+            }
+            // exclude all but the first call to __CLASS__, renumber array
+            $data['trace'] = $this->formatTrace( $trace );
+            // tags are a required field
+            $data['tags'] = isset($data['tags']) ? $data['tags'] : array();
+
+            // add apiKey to request if set
+            if( null !== $this->apiKey ) {
+                $data['apiKey'] = (string) $this->apiKey;
+            }
+
+            // process id
+            $data['info'] = $this->getInfoArray();
+
+            return $data;
+
+        }
+
+        private function processOptions( $options, &$stats )
+        {
+
+            $stats = array();
+            $output = array(
+                'die' => false,
+                'expand' => false,
+            );
+
+            $stats['optionsSent'] = ( null !== $options );
+            $stats['optionsArray'] = is_array($options);
+            $stats['optionsBitfield'] = is_integer($options);
+
+            if( is_array($options) ) {
+                $output['die'] = in_array( DIE, $options );
+                $output['expand'] = in_array( EXPAND, $options );
+            } elseif ( is_integer($options) ) {
+                $output['die'] = $options & DIE;
+                $output['expand'] = $options & EXPAND;
+            }
+            return $output;
+
+        }
+
+        protected function makeRequest( $data, $callOptions )
+        {
+
+            // get input expressions
+            $options = $this->processOptions($callOptions, $stats);
+            $inputExpressions = $this->getInputExpressions($options);
+
+            $data = $this->filloutRequest( $data, $inputExpressions );
+            $data['usageStats'] = $stats + $options;
+
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
+            curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json') );
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data) );
+            // argh
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $response = curl_exec($ch);
+            $curlInfo = curl_getinfo($ch);
+
+            // have any problems
+            if( $response === false ) {
+                throw new \Exception("Unable to connect to debugger as `{$url}`");
+            } elseif ( $curlInfo['http_code'] === 413 ) {
+                // Requested entity too large
+                $additionalInfo = '';
+                if( 'php-ref' === $data['handler'] ) {
+                    $phprefOption = $this->getPhpRefOptions();
+                    $additionalInfo = sprintf(
+                        "Try lowering the option 'maxDepth' (currently set to %s).",
+                        isset( $phprefOption['maxDepth'] ) ? $phprefOption['maxDepth'] : Ref::config('maxDepth')
+                    );
+                }
+                throw new \Exception($response.$additionalInfo);
+            } elseif ( $curlInfo['http_code'] !== 200 ) {
+                $response = trim($response);
+                throw new \Exception("DebugChannel server `{$url}` returned {$curlInfo['http_code']} and response `{$response}`");
+            }
+
+            // print_r( $options );
+            // exit early
+            if( in_array('!', $options) or $options['die'] ) {
+                exit(0);
+            }
+
+            return $this;
+
+        }
+
+        /**
+         * Get client identifier
+         * @return bool|string
+         */
+        protected function getIdentifier()
+        {
+            switch( $options['identifier'] ) {
+                case self::ANON_IDENTIFIER:
+                    return 'anon';
+                case self::DESCRIPTIVE_IDENTIFIER:
+                    return 'descriptive';
+                case self::NO_IDENTIFIER;
+                    return false;
+            }
+            return $options['identifier'];
+        }
+
+        protected function setRefConfig( array $options )
+        {
+            $output = array();
+            foreach( $options as $option => $value ) {
+                $output[$option] = \debugchannel\ref::config($option);
+                \debugchannel\ref::config($option, $value);
+            }
+            return $output;
+        }
+
+        protected function formatTrace( $trace )
+        {
+            return array_map(
+                function ( $component ) {
+                    if( isset($component['file'], $component['line']) and $component['line'] > 0 ) {
+                        $location = sprintf( "%s(%s): ", $component['file'], $component['line'] );
+                    } else {
+                        $location = '';
+                    }
+
+                    $fn = isset( $component['class'] ) ? "{$component['class']}{$component['type']}" : '';
+                    $fn .= "{$component['function']}()";
+
+                    $output = array(
+                        'location' => $location,
+                        'fn' => $fn
+                    );
+                    if(isset($component['what']) ) {
+                        $output['what'] = $component['what'];
+                    }
+                    return $output;
+                },
+                $trace
+             );
+        }
+
+        protected function deIndent( $text )
+        {
+            $leadingWhitespace = array();
+            $text = explode("\n", $text);
+            foreach( $text as $line ) {
+                if( !empty( $line ) ) {
+                    $leadingWhitespace[] = strlen( $line ) - strlen( ltrim( $line ) );
+                }
+            }
+            $indent = min( $leadingWhitespace );
+            foreach( $text as &$line ) {
+                $line = substr( $line, $indent );
+            }
+            return implode("\n", $text);
+        }
+
+        protected function getInfoArray()
+        {
+            return array(
+                'machineId' => $this->getMachineId(),
+                'pid' => $this->getPid(),
+                'sequenceNo' => ++self::$messageSequenceNo,
+                'generationTime' => microtime(true),
+            );
+        }
+
+        protected function getPid()
+        {
+            // process information
+            if( !isset(self::$pid) ) {
+                // whatever this can change
+                self::$pid = md5( microtime(). getmypid() );
+            }
+            return self::$pid;
+        }
+
+        protected function getMachineId()
+        {
+            if( !isset(self::$machineId) ) {
+                self::$machineId = php_uname('n');
+            }
+            return self::$machineId;
+        }
+
+        // based on https://github.com/digitalnature/php-ref/blob/master/ref.php
+        protected function getInputExpressions(array &$options) {
+
+            // used to determine the position of the current call,
+            // if more queries calls were made on the same line
+            static $lineInst = array();
+
+            // pull only basic info with php 5.3.6+ to save some memory
+            $trace = defined('DEBUG_BACKTRACE_IGNORE_ARGS') ? debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) : debug_backtrace();
+
+            while($callee = array_shift($trace)){
+
+                // extract only the information we neeed
+                $callee = array_intersect_key($callee, array_fill_keys(array('file', 'function', 'line', 'class', 'type'), false));
+                extract($callee);
+
+                // skip, if this code is called by any code in this file
+                // this could probably be hardened - there are only a couple of code paths to check for
+                //   1. via the static functions which can be detected by the presence of CacheDebugChannel::delegateGlobalFunction
+                //   2. by a public method on __CLASS__
+                // for now just check to see if we are being called from the right file
+                if( $file === __FILE__ )
+                    continue;
+
+                if(!$line || !$file)
+                    return array();
+
+                $code     = file($file);
+                $code     = $code[$line - 1]; // multiline expressions not supported!
+                $instIndx = 0;
+                $tokens   = token_get_all("<?php {$code}");
+
+                // locate the caller position in the line, and isolate argument tokens
+                foreach($tokens as $i => $token){
+
+                    // match token with our shortcut function name
+                    if(is_string($token) || ($token[0] !== T_STRING) || (strcasecmp($token[1], $function) !== 0))
+                        continue;
+
+                    // is this some method that happens to have the same name as the shortcut function?
+                    // Pete. We can't perform this test because this code might well be called from a object context
+                    // if(isset($tokens[$i - 1]) && is_array($tokens[$i - 1]) && in_array($tokens[$i - 1][0], array(T_DOUBLE_COLON, T_OBJECT_OPERATOR), true))
+                    //    continue;
+
+                    // find argument definition start, just after '('
+                    if(isset($tokens[$i + 1]) && ($tokens[$i + 1][0] === '(')){
+                        $instIndx++;
+
+                        if(!isset($lineInst[$line]))
+                            $lineInst[$line] = 0;
+
+                        if($instIndx <= $lineInst[$line])
+                            continue;
+
+                        $lineInst[$line]++;
+
+                        // gather options
+                        if($options !== null){
+                            $j = $i - 1;
+                            // is previous token a object operator?
+                            if( isset($tokens[$j]) && is_array($tokens[$j]) && in_array($tokens[$j][0], array(T_DOUBLE_COLON, T_OBJECT_OPERATOR), true) ) {
+                                // shift the object_operator and the object|object variable
+                                $j = $j-2;
+                            }
+                            while(isset($tokens[$j]) && is_string($tokens[$j]) && in_array($tokens[$j], array('@', '+', '-', '!', '~')))
+                                $options[] = $tokens[$j--];
+                        }
+
+                        $lvl = $index = $curlies = 0;
+                        $expressions = array();
+
+                        // get the expressions
+                        foreach(array_slice($tokens, $i + 2) as $token){
+
+                            if(is_array($token)){
+                              if($token[0] !== T_COMMENT)
+                                $expressions[$index][] = ($token[0] !== T_WHITESPACE) ? $token[1] : ' ';
+
+                              continue;
+                            }
+
+                            if($token === '{')
+                                $curlies++;
+
+                            if($token === '}')
+                                $curlies--;
+
+                            if($token === '(')
+                                $lvl++;
+
+                            if($token === ')')
+                                $lvl--;
+
+                            // assume next argument if a comma was encountered,
+                            // and we're not insde a curly bracket or inner parentheses
+                            if(($curlies < 1) && ($lvl === 0) && ($token === ',')){
+                                $index++;
+                                continue;
+                            }
+
+                            // negative parentheses count means we reached the end of argument definitions
+                            if($lvl < 0){
+                                foreach($expressions as &$expression)
+                                    $expression = trim(implode('', $expression));
+
+                                return $expressions;
+                            }
+
+                            $expressions[$index][] = $token;
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+    }
+
     class CachedDebugChannel
     {
 
@@ -3299,7 +3330,7 @@ namespace {
         public static $instance;
         private static $defaultConfig;
 
-        public static function setDebugChannel(debugchannel\DebugChannel $debugChannel)
+        public static function setDebugChannel(DebugChannel $debugChannel)
         {
             self::$instance = $debugChannel;
         }

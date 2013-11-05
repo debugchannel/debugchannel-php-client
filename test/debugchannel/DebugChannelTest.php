@@ -1,6 +1,6 @@
 <?php
 
-namespace debugchannel;
+require_once __DIR__ . '/../../src/debugchannel/DebugChannel.php';
 
 class MockedDebugChannel extends DebugChannel
 {
@@ -11,7 +11,7 @@ class MockedDebugChannel extends DebugChannel
         return $this->data;
     }
 
-    protected function makeRequest( $data )
+    protected function makeRequest( $data, $options )
     {
         $data = $this->filloutRequest($data, array());
         $this->data = $data;
