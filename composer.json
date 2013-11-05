@@ -3,9 +3,9 @@
     "license": "AFFERO",
     "type": "project",
     "autoload": {
-        "psr-0": {
-        	"": "src/"
-        }
+        "files": [
+            "src/Bond/functions.php"
+        ]
     },
     "require": {
         "php": ">=5.3"

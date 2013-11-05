@@ -2447,8 +2447,8 @@ namespace debugChannel {
 
 namespace {
 
-    if( !defined( 'EXPAND' ) ) { define( 'EXPAND', 1 ); }
-    if( !defined( 'DIE' ) ) { define( 'DIE', 2 ); }
+    if( !defined( 'DC_EXPAND' ) ) { define( 'DC_EXPAND', 1 ); }
+    if( !defined( 'DC_DIE' ) ) { define( 'DC_DIE', 2 ); }
 
     /**
      * PHP client for debugchannel
@@ -2710,7 +2710,7 @@ namespace {
          * It can detect recursion, replacing the reference with a "RECURSION" string.
          * $val is not modified.
          * @param mixed $val  the mixed value to publish
-         * @param mixed $options configure different behaviour for each request
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel object bound to $this
          */
         public function explore( $dataToLog, $options = null, array $tags = array() )
@@ -2750,6 +2750,7 @@ namespace {
          * cells are primtives.
          *
          * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this
          */
         public function table($value, $options = null)
@@ -2842,6 +2843,7 @@ namespace {
          * it cannot be null, and cannot be any other primtive such as int.
          *
          * @param string $text  the string to publish as raw text
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel the DebugChannel instance bound to $this.
          */
         public function string($text, $options = null)
@@ -2873,14 +2875,14 @@ namespace {
          * some languages will have a slight varient on what its called, ie c++ is cpp.
          * Default sql.
          * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          * @throws \InvalidArgumentException if $text is not a string|number|bool
          */
-        public function code( $text, $lang = 'sql', $deIndent = true )
+        public function code( $text, $lang = 'sql', $deIndent = true, $options = null )
         {
             // validates $text
             if (is_numeric($text) or is_bool($text)) {
-                print_r($text);
                 $text = (string)$text;
             } else if (!is_string($text)) {
                 throw new \InvalidArgumentException('DebugChannel::code only accepts scalars for $text argument');
@@ -2895,7 +2897,7 @@ namespace {
                 $text = $this->deIndent($text);
             }
             $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace));
+            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace), $options);
         }
 
         /**
@@ -2907,6 +2909,7 @@ namespace {
          *
          * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative.
          * the string can also contain the image in base64 format.
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function image($identifier, $options = null)
@@ -2939,6 +2942,7 @@ namespace {
          *
          * @param string $message  the string containing the message to publish as IM message
          * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function chat($message, $senderName=null, $options = null)
@@ -2967,6 +2971,7 @@ namespace {
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
          * if multiple people are viewing the channel in browser then every user will be effected
          *
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
         public function clear( $options = null )
@@ -2981,6 +2986,7 @@ namespace {
          * and examples of different use cases.
          * stdout is not effected by calling this method
          *
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return debugchannel\DebugChannel the DebugChannel instance that $this is bound to
          */
         public function help( $options = null )
@@ -3046,11 +3052,11 @@ namespace {
             $stats['optionsBitfield'] = is_integer($options);
 
             if( is_array($options) ) {
-                $output['die'] = in_array( DIE, $options );
-                $output['expand'] = in_array( EXPAND, $options );
+                $output['die'] = in_array( DC_DIE, $options );
+                $output['expand'] = in_array( DC_EXPAND, $options );
             } elseif ( is_integer($options) ) {
-                $output['die'] = $options & DIE;
-                $output['expand'] = $options & EXPAND;
+                $output['die'] = !!($options & DC_DIE);
+                $output['expand'] = !!($options & DC_EXPAND);
             }
             return $output;
 
@@ -3065,6 +3071,8 @@ namespace {
 
             $data = $this->filloutRequest( $data, $inputExpressions );
             $data['usageStats'] = $stats + $options;
+
+            print_r( $data );
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
