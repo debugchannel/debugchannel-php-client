@@ -1,7 +1,9 @@
 <?php
 
+namespace {
 
-namespace debugChannel {
+    if( !defined( 'DC_EXPAND' ) ) { define( 'DC_EXPAND', 1 ); }
+    if( !defined( 'DC_DIE' ) ) { define( 'DC_DIE', 2 ); }
 
     /**
      * PHP client for debugchannel
@@ -235,10 +237,10 @@ namespace debugChannel {
          * Alias for ->explore().
          * @see debugchannel\DebugChannel
          */
-        public function __invoke( $dataToLog, array $tags = array() )
+        public function __invoke( $dataToLog, $options = null, array $tags = array() )
         {
             return call_user_func(
-                array( $this, 'log'),
+                array( $this, 'explore'),
                 func_get_args()
             );
         }
@@ -247,9 +249,12 @@ namespace debugChannel {
          * Alias for ->explore().
          * @see debugchannel\DebugChannel
          */
-        public function log( $dataToLog, array $tags = array() )
+        public function log( $dataToLog, $options = null, array $tags = array() )
         {
-            return $this->explore($dataToLog, $tags);
+            return call_user_func(
+                array( $this, 'explore'),
+                func_get_args()
+            );
         }
 
         /**
@@ -260,14 +265,15 @@ namespace debugChannel {
          * It can detect recursion, replacing the reference with a "RECURSION" string.
          * $val is not modified.
          * @param mixed $val  the mixed value to publish
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel object bound to $this
          */
-        public function explore( $dataToLog, array $tags = array() )
+        public function explore( $dataToLog, $options = null, array $tags = array() )
         {
             $originalRefOptions = $this->setRefConfig($this->getPhpRefOptions());
 
             // use the custom formatter which doesn't have the "multiple levels of nesting break out of their container' bug
-            $ref = new Ref(new RHtmlSpanFormatter());
+            $ref = new \debugchannel\Ref( new debugchannel\RHtmlSpanFormatter() );
 
             ob_start();
             $ref->query( $dataToLog, null );
@@ -280,7 +286,8 @@ namespace debugChannel {
                         $html,
                     ),
                     'tags' => $tags,
-                )
+                ),
+                $options
             );
 
             $this->setRefConfig($originalRefOptions);
@@ -298,9 +305,10 @@ namespace debugChannel {
          * cells are primtives.
          *
          * @param array $table  a 2-dimensional array of values, where dimension 1 is rows, dimension 2 is columns
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this
          */
-        public function table($value)
+        public function table($value, $options = null)
         {
 
             $tableFlatten = function ($value) {
@@ -375,7 +383,7 @@ namespace debugChannel {
                     }
                     $table[] = $tableRow;
                 }
-                return $this->sendDebug('table', array($table));
+                return $this->sendDebug('table', array($table), $options);
             }
 
 
@@ -390,11 +398,12 @@ namespace debugChannel {
          * it cannot be null, and cannot be any other primtive such as int.
          *
          * @param string $text  the string to publish as raw text
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel the DebugChannel instance bound to $this.
          */
-        public function string($text)
+        public function string($text, $options = null)
         {
-            return $this->sendDebug('string', (string) $text);
+            return $this->sendDebug('string', array( (string) $text ), $options );
         }
 
         /**
@@ -421,14 +430,14 @@ namespace debugChannel {
          * some languages will have a slight varient on what its called, ie c++ is cpp.
          * Default sql.
          * @param bool $deIndent  bool is true when you want the identation in the text to be ignored, false otherwise
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          * @throws \InvalidArgumentException if $text is not a string|number|bool
          */
-        public function code( $text, $lang = 'sql', $deIndent = true )
+        public function code( $text, $lang = 'sql', $deIndent = true, $options = null )
         {
             // validates $text
             if (is_numeric($text) or is_bool($text)) {
-                print_r($text);
                 $text = (string)$text;
             } else if (!is_string($text)) {
                 throw new \InvalidArgumentException('DebugChannel::code only accepts scalars for $text argument');
@@ -443,7 +452,7 @@ namespace debugChannel {
                 $text = $this->deIndent($text);
             }
             $trace = $this->formatTrace(debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS));
-            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace));
+            return $this->sendDebug('syntaxHighlight', array($text, $lang, $trace), $options);
         }
 
         /**
@@ -455,9 +464,10 @@ namespace debugChannel {
          *
          * @param string $identifier  the string can be the location of the image in the filesystem either fully qualified or relative.
          * the string can also contain the image in base64 format.
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
-        public function image($identifier)
+        public function image($identifier, $options = null)
         {
             if (!is_string($identifier) or trim($identifier) === "") {
                 throw new \InvalidArgumentException(
@@ -475,7 +485,7 @@ namespace debugChannel {
             }
 
             $base64 = $isFile ? base64_encode(file_get_contents($identifier)) : $identifier;
-            return $this->sendDebug('image', $base64);
+            return $this->sendDebug('image', array($base64), $options) ;
         }
 
         /**
@@ -487,9 +497,10 @@ namespace debugChannel {
          *
          * @param string $message  the string containing the message to publish as IM message
          * @param string $senderName  the name of the sender that will be displayed next to the message. Default 'PHP-client'.
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
-        public function chat($message, $senderName=null)
+        public function chat($message, $senderName=null, $options = null)
         {
             if (is_null($senderName)) {
                 $senderName = self::ANON_IDENTIFIER;
@@ -515,11 +526,12 @@ namespace debugChannel {
          * if multiple clients are publishing to the same channel, this will remove their debugs as well.
          * if multiple people are viewing the channel in browser then every user will be effected
          *
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return DebugChannel  the DebugChannel instance bound to $this.
          */
-        public function clear()
+        public function clear( $options = null )
         {
-            return $this->sendDebug('clear');
+            return $this->sendDebug('clear', array(), $options );
         }
 
         /**
@@ -529,23 +541,24 @@ namespace debugChannel {
          * and examples of different use cases.
          * stdout is not effected by calling this method
          *
+         * @param mixed $options configure different behaviour for each request. Either a array or a bitmask of DC_DIE, DC_EXPAND
          * @return debugchannel\DebugChannel the DebugChannel instance that $this is bound to
          */
-        public function help()
+        public function help( $options = null )
         {
-            return $this->sendDebug('help', array('php'));
+            return $this->sendDebug('help', array('php'), $options );
         }
 
         /**#@-*/
 
-        protected function sendDebug ($handler, $args = array(), $stacktrace = array())
+        protected function sendDebug ($handler, array $args = array(), $options = null )
         {
             $this->makeRequest(
                 array(
                     'handler' => $handler,
-                    'args' => is_array($args) ? $args : array($args),
-                    'stacktrace' => $stacktrace
-                )
+                    'args' => $args,
+                ),
+                $options
             );
             return $this;
         }
@@ -580,14 +593,39 @@ namespace debugChannel {
 
         }
 
-        protected function makeRequest( $data )
+        private function processOptions( $options, &$stats )
+        {
+
+            $stats = array();
+            $output = array(
+                'die' => false,
+                'expand' => false,
+            );
+
+            $stats['optionsSent'] = ( null !== $options );
+            $stats['optionsArray'] = is_array($options);
+            $stats['optionsBitfield'] = is_integer($options);
+
+            if( is_array($options) ) {
+                $output['die'] = in_array( DC_DIE, $options );
+                $output['expand'] = in_array( DC_EXPAND, $options );
+            } elseif ( is_integer($options) ) {
+                $output['die'] = !!($options & DC_DIE);
+                $output['expand'] = !!($options & DC_EXPAND);
+            }
+            return $output;
+
+        }
+
+        protected function makeRequest( $data, $callOptions )
         {
 
             // get input expressions
-            $options = array();
+            $options = $this->processOptions($callOptions, $stats);
             $inputExpressions = $this->getInputExpressions($options);
 
             $data = $this->filloutRequest( $data, $inputExpressions );
+            $data['usageStats'] = $stats + $options;
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url = $this->getRequestUrl() );
@@ -615,12 +653,13 @@ namespace debugChannel {
                 }
                 throw new \Exception($response.$additionalInfo);
             } elseif ( $curlInfo['http_code'] !== 200 ) {
-                throw new \Exception($response);
+                $response = trim($response);
+                throw new \Exception("DebugChannel server `{$url}` returned {$curlInfo['http_code']} and response `{$response}`");
             }
 
             // print_r( $options );
             // exit early
-            if( in_array('!', $options) ) {
+            if( in_array('!', $options) or $options['die'] ) {
                 exit(0);
             }
 
@@ -649,8 +688,8 @@ namespace debugChannel {
         {
             $output = array();
             foreach( $options as $option => $value ) {
-                $output[$option] = ref::config($option);
-                ref::config($option, $value);
+                $output[$option] = \debugchannel\ref::config($option);
+                \debugchannel\ref::config($option, $value);
             }
             return $output;
         }
@@ -726,7 +765,7 @@ namespace debugChannel {
         }
 
         // based on https://github.com/digitalnature/php-ref/blob/master/ref.php
-        protected function getInputExpressions(array &$options = null){
+        protected function getInputExpressions(array &$options) {
 
             // used to determine the position of the current call,
             // if more queries calls were made on the same line
@@ -844,9 +883,143 @@ namespace debugChannel {
 
     }
 
+    class CachedDebugChannel
+    {
+
+        const CONF_FILE_NAME = 'dc_setup.json';
+
+        public static $instance;
+        private static $defaultConfig;
+
+        public static function setDebugChannel(DebugChannel $debugChannel)
+        {
+            self::$instance = $debugChannel;
+        }
+
+        public static function setDefaultConfig( debugchannel\Config $config, $throwException = true )
+        {
+            if( !$config->isValid($error) ) {
+                if( $throwException ) {
+                    throw new \Exception($error);
+                }
+                return false;
+            }
+            self::$defaultConfig = $config;
+            return true;
+        }
+
+        public static function getDebugChannel()
+        {
+            if( !self::$instance ) {
+
+                // @joseph - if you wanted to reduce coupling the code below could go in a separate function
+                $configFileLocations = array(
+                    __DIR__ . '/' . self::CONF_FILE_NAME,
+                    './' . self::CONF_FILE_NAME,
+                    $_SERVER['HOME'] . '/' . self::CONF_FILE_NAME
+                );
+
+                // have a default config set
+                $config = self::$defaultConfig;
+
+                // check config files
+                while( list(,$file) = each( $configFileLocations) and !$config ) {
+                    if( file_exists($file) ) {
+                        try {
+                            $config = debugchannel\load_config_from_json( file_get_contents($file) );
+                            $config->isValid($error, true);
+                        } catch ( \Exception $e ) {
+                            $config = null;
+                            throw new \Exception("Error in DebugChannel config file `{$file}` - {$e->getMessage()}");
+                        }
+                    }
+                }
+
+                // load plain defaults
+                if( !$config ) {
+                    $config = new debugchannel\Config(
+                        'localhost',
+                        'default'
+                    );
+                }
+
+                self::$instance = debugchannel\build_debugchannel_from_config($config);
+            }
+            return self::$instance;
+        }
+
+        public static function delegateGlobalFunction($globalFunctionName, array $args) {
+            call_user_func_array(
+                array(self::getDebugChannel(), substr($globalFunctionName, 3)),
+                $args
+            );
+        }
+
+    }
+
+    function dc_setup()
+    {
+        $args = func_get_args();
+        if( !$args ) {
+            throw new \Exception('Either pass a debugchannel\Config object or a $host, $channel');
+        }
+        if( is_object($args[0]) and $args[0] instanceof debugchannel\Config ) {
+            $config = $args[0];
+        } else {
+            $reflConfig = new ReflectionClass('debugchannel\Config');
+            $config = $reflConfig->newInstanceArgs($args);
+        }
+        CachedDebugChannel::$instance = null;
+        CachedDebugChannel::setDefaultConfig($config);
+    }
+
+    function dc_explore()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dc_table()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dc_string()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dc_code()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dc_image()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dc_chat()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dc_clear()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+    function dc_help()
+    {
+        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
+    }
+
+}
+
+namespace debugChannel {
+
     // backwards compatible D
     // now with added deprecated message
-    class D extends DebugChannel
+    class D extends \DebugChannel
     {
         protected function filloutRequest( array $data, $inputExpressions )
         {
@@ -2732,8 +2905,6 @@ namespace debugChannel {
 
     }
 
-
-
     /**
      * Formatter abstraction
      */
@@ -3275,7 +3446,7 @@ namespace debugChannel {
     function build_debugchannel_from_config( Config $config, $throwError = true )
     {
         if( $config->isValid($error) ) {
-            return new DebugChannel(
+            return new \DebugChannel(
                 $config->host,
                 $config->channel,
                 $config->apiKey,
@@ -3285,140 +3456,6 @@ namespace debugChannel {
             throw new \Exception($error);
         }
         return false;
-    }
-
-}
-
-namespace {
-
-    class CachedDebugChannel
-    {
-
-        const CONF_FILE_NAME = 'dc_setup.json';
-
-        public static $instance;
-        private static $defaultConfig;
-
-        public static function setDebugChannel(debugchannel\DebugChannel $debugChannel)
-        {
-            self::$instance = $debugChannel;
-        }
-
-        public static function setDefaultConfig( debugchannel\Config $config, $throwException = true )
-        {
-            if( !$config->isValid($error) ) {
-                if( $throwException ) {
-                    throw new \Exception($error);
-                }
-                return false;
-            }
-            self::$defaultConfig = $config;
-            return true;
-        }
-
-        public static function getDebugChannel()
-        {
-            if( !self::$instance ) {
-
-                // @joseph - if you wanted to reduce coupling the code below could go in a separate function
-                $configFileLocations = array(
-                    __DIR__ . '/' . self::CONF_FILE_NAME,
-                    './' . self::CONF_FILE_NAME,
-                    $_SERVER['HOME'] . '/' . self::CONF_FILE_NAME
-                );
-
-                // have a default config set
-                $config = self::$defaultConfig;
-
-                // check config files
-                while( list(,$file) = each( $configFileLocations) and !$config ) {
-                    if( file_exists($file) ) {
-                        try {
-                            $config = debugchannel\load_config_from_json( file_get_contents($file) );
-                            $config->isValid($error, true);
-                        } catch ( \Exception $e ) {
-                            $config = null;
-                            throw new \Exception("Error in DebugChannel config file `{$file}` - {$e->getMessage()}");
-                        }
-                    }
-                }
-
-                // load plain defaults
-                if( !$config ) {
-                    $config = new debugchannel\Config(
-                        'localhost',
-                        'default'
-                    );
-                }
-
-                self::$instance = debugchannel\build_debugchannel_from_config($config);
-            }
-            return self::$instance;
-        }
-
-        public static function delegateGlobalFunction($globalFunctionName, array $args) {
-            call_user_func_array(
-                array(self::getDebugChannel(), substr($globalFunctionName, 3)),
-                $args
-            );
-        }
-
-    }
-
-    function dc_setup()
-    {
-        $args = func_get_args();
-        if( !$args ) {
-            throw new \Exception('Either pass a debugchannel\Config object or a $host, $channel');
-        }
-        if( is_object($args[0]) and $args[0] instanceof debugchannel\Config ) {
-            $config = $args[0];
-        } else {
-            $reflConfig = new ReflectionClass('debugchannel\Config');
-            $config = $reflConfig->newInstanceArgs($args);
-        }
-        CachedDebugChannel::$instance = null;
-        CachedDebugChannel::setDefaultConfig($config);
-    }
-
-    function dc_explore()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
-    }
-
-    function dc_table()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
-    }
-
-    function dc_string()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
-    }
-
-    function dc_code()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
-    }
-
-    function dc_image()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
-    }
-
-    function dc_chat()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
-    }
-
-    function dc_clear()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
-    }
-
-    function dc_help()
-    {
-        return CachedDebugChannel::delegateGlobalFunction(__FUNCTION__, func_get_args());
     }
 
 }

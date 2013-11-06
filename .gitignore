@@ -2,4 +2,4 @@
 **/*.DS_Store
 *.sublime*
 vendor/
-test/debugchannel/DPete.php
+test/DPete.php
