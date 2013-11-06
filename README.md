@@ -18,7 +18,16 @@ Composer will then automagically add debugchannel\DebugChannel to your autoloade
 
 php-client is hosted on GitHub and can be used just like any other local library.
 
-Download the repository by checking out the code `git clone https://github.com/SquareProtonOrg/debugchannel-php-client` or by downloading a zip `https://github.com/debugchannel/debugchannel-php-client/archive/master.zip`
+Download the repository by checking out the code:
+
+````
+git clone https://github.com/SquareProtonOrg/debugchannel-php-client
+````
+or by downloading a zip:
+
+```
+wget https://github.com/debugchannel/debugchannel-php-client/archive/master.zip
+```
 
 This will create a directory called `debugchannel-php-client`. You only need to include 1 file - located at `debugchannel-php-client/dist/DebugChannel.php` - and you are done.
 
