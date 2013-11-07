@@ -1,9 +1,6 @@
 <?php
 
-use debugchannel\DebugChannel;
-use debugchannel\D;
-
-require __DIR__ ."/src/debugchannel/DebugChannel.php";
+require __DIR__ ."/src/DebugChannel.php";
 
 /*
 foreach( range(1,1) as $n ) {
