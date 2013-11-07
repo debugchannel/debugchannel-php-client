@@ -152,16 +152,31 @@ $d->help();
 ```
 Outputs a helpful message on your channel with links to usage instructions and documentation. Also good for checking if everything is working.
 
-## Exiting ##
+## Options ##
 
-If you want to exit immediately after sending a message prepend the `!` to any of the methods which cause a debug message to be sent. This will terminate script with a exit code 0;
+All the functions which send output to the debug server can take a few options. These are
+
+  - die; terminate script execution immediately after sending a message. Exits with code 0.
+  - expand; chose whether to expand object when passed to ->explore(). At the time of writing this isn't yet implemented in the webapp.
+
+Debug channel defines two constants - `DC_DIE` and `DC_EXPAND` - to express these. You can pass options as either a array or you can get your bitwise operator on. The following two explore lines are equivalent.
 
 ```
-$d = new DebugChannel("https://debugchannel.com", "something");
-!$d->explore("Something isn't quite right- exiting");
+$d = new DebugChannel('localhost', 'mychannel');
+
+$d->explore( "...", array(DC_DIE, DC_EXPAND) );
+$d->explore( "...", DC_DIE | DC_EXPAND );
 ```
 
-The complete list of functions this operates on is `!dc_explore()`, `!dc_table()`, `!dc_string()`, `!dc_code()`, `!dc_image()`, `!dc_chat()`, `!dc_clear()`, `!dc_help()`, `!$dc->explore()`, `!$dc->table()`, `!$dc->string()`, `!$dc->code()`, `!$dc->image()`, `!$dc->chat()`, `!$dc->clear()`, `!$dc->help()`,
+There is also a shortcut for the 'die' functionality. Prepend the `!` to any of the methods which cause a debug message to be sent. The following are equivalent.
+
+```
+!$d->explore("I'm going to exit");
+$d->explore("I'm going to exit", [DC_DIE] );
+$d->explore("I'm going to exit", DC_DIE );
+```
+
+The complete list of functions this operates on is `!dc_explore()`, `!dc_table()`, `!dc_string()`, `!dc_code()`, `!dc_image()`, `!dc_chat()`, `!dc_clear()`, `!dc_help()`, `!$dc->explore()`, `!$dc->table()`, `!$dc->string()`, `!$dc->code()`, `!$dc->image()`, `!$dc->chat()`, `!$dc->clear()`, `!$dc->help()`.
 
 ## Static Methods and Default Configuration ##
 
