@@ -143,6 +143,24 @@ $d->help();
 ```
 Outputs a helpful message on your channel with links to usage instructions and documentation. Also good for checking if everything is working.
 
+## Options ##
+
+All the functions which send output to the debug server can take a few options. These are
+
+  - die, terminate script execution immediately after this function call
+  - expand. Whether to expand this object when passed to ->explore(). At the time of writing this isn't implemented yet in the webapp.
+
+Debug channel defines two constants - `DC_DIE` and `DC_EXPAND` - for both of these options.
+
+You can pass options as either a array or as integer if you want to get your bitwise operator on. The following are equivalent.
+
+```
+$d = new DebugChannel('localhost', 'mychannel');
+
+$d->explore( "...", array(DC_DIE, DC_EXPAND) );
+$d->explore( "...", DC_DIE | DC_EXPAND );
+```
+
 ## Exiting ##
 
 If you want to exit immediately after sending a message prepend the `!` to any of the methods which cause a debug message to be sent. This will terminate script with a exit code 0;
