@@ -1,5 +1,5 @@
 {
-    "name": "squareproton/debuchannel-php-client",
+    "name": "squareproton/debugchannel-php-client",
     "license": "AFFERO",
     "type": "project",
     "autoload": {
